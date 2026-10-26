@@ -1,0 +1,90 @@
+diff --git a/res/resources.json b/res/resources.json
+index 7830762..3348551 100644
+--- a/res/resources.json
++++ b/res/resources.json
+@@ -56,6 +56,15 @@
+             "output": "images/entities.c",
+             "static": true,
+ 
++            "tile_size": 2,
++            "palette": "res/palettes/sprites.png",
++            "bpp": 4
++        }, {
++            "name": "mobs_tileset",
++            "input": "images/mobs.png",
++            "output": "images/mobs.c",
++            "static": true,
++
+             "tile_size": 2,
+             "palette": "res/palettes/sprites.png",
+             "bpp": 4
+diff --git a/src/level.c b/src/level.c
+index c81e009..78bdce7 100644
+--- a/src/level.c
++++ b/src/level.c
+@@ -201,7 +201,7 @@ static inline void draw_lantern_light(struct entity_Data *data) {
+         for(i32 xl = xl0; xl < xl1; xl++) {
+             u32 xd = (xl - xr + (xl >= xr)) * (xl - xr + (xl >= xr));
+ 
+-            u32 val = 192 + (xd + yd <= 66) + (xd + yd <= 46);
++            u32 val = 224 + (xd + yd <= 66) + (xd + yd <= 46);
+             if(BG2_TILEMAP[xl + yl * 32] < val)
+                 BG2_TILEMAP[xl + yl * 32] = val;
+         }
+@@ -232,7 +232,7 @@ static inline void draw_player_light(struct Level *level, u32 *used_sprites) {
+                 .priority = 2,
+ 
+                 .size = SPRITE_SIZE_64x64,
+-                .tile = 336 + i * 64
++                .tile = 368 + i * 64
+             });
+         }
+         *used_sprites += 4;
+@@ -252,7 +252,7 @@ static inline void draw_player_light(struct Level *level, u32 *used_sprites) {
+             .size = SPRITE_SIZE_32x32,
+             .flip = 0,
+ 
+-            .tile = 320
++            .tile = 352
+         });
+         *used_sprites += 1;
+     }
+@@ -349,7 +349,7 @@ static inline void draw_lava_light(struct Level *level) {
+                 for(i32 xl = xl0; xl < xl1; xl++) {
+                     u32 xd = (xl - xr + (xl >= xr)) * (xl - xr + (xl >= xr));
+ 
+-                    u32 val = 192 + (xd + yd <= 34) + (xd + yd <= 24);
++                    u32 val = 224 + (xd + yd <= 34) + (xd + yd <= 24);
+                     if(BG2_TILEMAP[xl + yl * 32] < val)
+                         BG2_TILEMAP[xl + yl * 32] = val;
+                 }
+diff --git a/src/screen.c b/src/screen.c
+index 7dd43e0..476ea6e 100644
+--- a/src/screen.c
++++ b/src/screen.c
+@@ -27,6 +27,7 @@
+ #include "res/images/level-light.c"
+ 
+ #include "res/images/entities.c"
++#include "res/images/mobs.c"
+ #include "res/images/sparks.c"
+ #include "res/images/items_spr.c"
+ #include "res/images/player-light.c"
+@@ -111,13 +112,14 @@ void screen_init(void) {
+     LOAD_TILESET(1, 32, font_tileset);
+     LOAD_TILESET(1, 96, gui_tileset);
+     LOAD_TILESET(1, 128, items_bg_tileset);
+-    LOAD_TILESET(1, 192, level_light_tileset);
++    LOAD_TILESET(1, 224, level_light_tileset);
+ 
+     LOAD_TILESET(4, 0, entities_tileset);
+     LOAD_TILESET(4, 192, sparks_tileset);
+     LOAD_TILESET(4, 256, items_spr_tileset);
+-    LOAD_TILESET(4, 320, player_light_tileset);
+-    LOAD_TILESET(4, 336, player_lantern_light_tileset);
++    LOAD_TILESET(4, 352, player_light_tileset);
++    LOAD_TILESET(4, 368, player_lantern_light_tileset);
++    LOAD_TILESET(4, 744, mobs_tileset);
+ 
+     // load font sprites
+     for(u32 i = 0; i <= 51; i++) {

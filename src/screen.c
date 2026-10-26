@@ -27,6 +27,7 @@
 #include "res/images/level-light.c"
 
 #include "res/images/entities.c"
+#include "res/images/mobs.c"
 #include "res/images/sparks.c"
 #include "res/images/items_spr.c"
 #include "res/images/player-light.c"
@@ -111,13 +112,14 @@ void screen_init(void) {
     LOAD_TILESET(1, 32, font_tileset);
     LOAD_TILESET(1, 96, gui_tileset);
     LOAD_TILESET(1, 128, items_bg_tileset);
-    LOAD_TILESET(1, 192, level_light_tileset);
+    LOAD_TILESET(1, 224, level_light_tileset);
 
     LOAD_TILESET(4, 0, entities_tileset);
     LOAD_TILESET(4, 192, sparks_tileset);
     LOAD_TILESET(4, 256, items_spr_tileset);
-    LOAD_TILESET(4, 320, player_light_tileset);
-    LOAD_TILESET(4, 336, player_lantern_light_tileset);
+    LOAD_TILESET(4, 352, player_light_tileset);
+    LOAD_TILESET(4, 368, player_lantern_light_tileset);
+    LOAD_TILESET(4, 744, mobs_tileset);
 
     // load font sprites
     for(u32 i = 0; i <= 51; i++) {

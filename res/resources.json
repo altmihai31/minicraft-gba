@@ -60,6 +60,15 @@
             "palette": "res/palettes/sprites.png",
             "bpp": 4
         }, {
+            "name": "mobs_tileset",
+            "input": "images/mobs.png",
+            "output": "images/mobs.c",
+            "static": true,
+
+            "tile_size": 2,
+            "palette": "res/palettes/sprites.png",
+            "bpp": 4
+        }, {
             "name": "sparks_tileset",
             "input": "images/sparks.png",
             "output": "images/sparks.c",
