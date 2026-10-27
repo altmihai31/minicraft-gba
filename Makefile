@@ -24,6 +24,14 @@ CPPFLAGS := -Iinclude -MMD -MP
 CFLAGS   := -O3 -fomit-frame-pointer -marm -mcpu=arm7tdmi\
             -Wall -pedantic
 
+# if DEBUG_KIT=1, build the debug version (src/debug-kit.c): separate
+# objects and output file, so it never mixes with the normal build
+ifeq ($(DEBUG_KIT),1)
+    CPPFLAGS     += -DDEBUG_KIT
+    OUT_FILENAME := $(OUT_FILENAME)-debug
+    OBJ_DIR      := obj-debug
+endif
+
 ASFLAGS := -mcpu=arm7tdmi
 
 LDFLAGS := -nostartfiles -Wl,--print-memory-usage

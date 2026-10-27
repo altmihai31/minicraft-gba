@@ -1,5 +1,6 @@
 # binary
 /obj
+/obj-debug
 /bin
 
 # converted resources

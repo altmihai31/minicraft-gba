@@ -32,6 +32,15 @@ make build OS=Linux                                                # Makefile's 
 - mGBA locks the ROM it has open: close it before building, or `objcopy` can't write `bin/minicraft-expanded-edition.gba`
   (the link still succeeds, so the old ROM silently stays). mGBA keys: X = A, Z = B, Enter = Start.
 
+### Debug version
+`make build OS=Linux DEBUG_KIT=1` -> `bin/minicraft-expanded-edition-debug.gba` ("DEBUG BUILD" on the title
+screen). It uses its own object dir (`obj-debug/`) and save file, so it never mixes with the normal build,
+which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_KIT`:
+- New game starts with gem tools, 99 of every mod item, furnace/oven/anvil/lantern, crafting materials, 300 XP.
+- Next to the spawn: a pond (fishing, buckets), sheep, a wolf and other animals, and stairs down. The stairs
+  chain straight down (3 tiles apart) through lit test rooms: level 2 has a skeleton, spider and bloater,
+  level 1 a spawner, level 0 a lava pool (water bucket -> obsidian) and the magma golem at the far end.
+
 ## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026, all content implemented)
 - **EWRAM 97.8 % full** (256 468 B used, ~5 670 B free): 5 levels 143 290 B, collision table
   `level_solid_entities` 100 352 B, 32 chests 12 352 B. Do NOT grow world size, level count, chest count or entity cap.

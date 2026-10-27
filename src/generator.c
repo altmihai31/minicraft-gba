@@ -19,6 +19,7 @@
 #include "tile.h"
 #include "entity.h"
 #include "survival.h"
+#include "debug-kit.h"
 
 static inline i8 get(i8 *values, u32 x, u32 y) {
     if(x >= LEVEL_W || y >= LEVEL_H)
@@ -630,4 +631,8 @@ void generate_levels(void) {
 
     generate_entities();
     generate_mod_entities();
+
+#ifdef DEBUG_KIT
+    debug_kit_build_world();
+#endif
 }

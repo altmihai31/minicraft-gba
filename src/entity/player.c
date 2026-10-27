@@ -25,6 +25,7 @@
 #include "crafting.h"
 #include "sound.h"
 #include "survival.h"
+#include "debug-kit.h"
 
 #define MAX_HP      PLAYER_MAX_HP
 #define MAX_STAMINA PLAYER_MAX_STAMINA
@@ -104,6 +105,10 @@ void entity_add_player(struct Level *level, u8 xt, u8 yt,
 
         item_to_add.type = WORKBENCH_ITEM;
         inventory_add(&player_inventory, &item_to_add, 0);
+
+#ifdef DEBUG_KIT
+        debug_kit_give_items();
+#endif
     }
 }
 

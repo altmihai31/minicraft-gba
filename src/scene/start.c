@@ -129,6 +129,9 @@ static void start_draw(void) {
         }
     }
     screen_write("EXPANDED EDITION", 0, 7, 6);
+#ifdef DEBUG_KIT
+    screen_write("DEBUG BUILD", 2, 0, 19);
+#endif
 
     if(can_load) {
         START_WRITE("LOAD GAME", LOAD_GAME, 10, 9);
