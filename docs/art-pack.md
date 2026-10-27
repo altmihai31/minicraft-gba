@@ -1,4 +1,4 @@
-# Minicraft GBA fork - art pack
+# Minicraft Expanded Edition - art pack
 
 Original sprites for the RAM-free feature list: 14 blocks, 40 item icons, 10 mobs (5 frames each),
 furniture, projectiles and HUD icons. Verified with the project's own build: `make res && make` passes,

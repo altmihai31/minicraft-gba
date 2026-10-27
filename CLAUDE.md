@@ -1,4 +1,4 @@
-# Minicraft GBA – mod fork
+# Minicraft Expanded Edition (Minicraft GBA mod fork)
 
 Fork of Vulcalien's **Minicraft for GBA** (github.com/Vulcalien/minicraft-gba, GPLv3, v2.0 + later commits).
 Goal: add Minecraft-style content (blocks, items, mobs, player systems) **without** increasing RAM use.
@@ -9,7 +9,7 @@ Original art and sounds are Markus Persson's (2011, no explicit licence) – all
 git submodule update --init          # libsimplegba + res2gba
 make -C lib/libsimplegba
 make res && make                     # res2gba converts res/ PNGs -> src/res/*.c
-mgba-qt bin/minicraft.gba            # or: make run
+mgba-qt bin/minicraft-expanded-edition.gba            # or: make run
 ```
 Toolchain: `arm-none-eabi-gcc` (macOS: `brew install --cask gcc-arm-embedded`), Python 3 + Pillow, mGBA.
 Performance overlay in game: hold L+R, press Select.
@@ -22,14 +22,14 @@ make -C lib/libsimplegba AR=arm-none-eabi-ar                       # host `ar` d
 mkdir -p src/res/images src/res/palettes src/res/sounds
 python tools/res2gba-win.py tools/res2gba/res2gba res/resources.json   # replaces `make res`
 make build OS=Linux                                                # Makefile's Windows branch is a stub
-"/c/Program Files/mGBA/mGBA.exe" bin/minicraft.gba
+"/c/Program Files/mGBA/mGBA.exe" bin/minicraft-expanded-edition.gba
 ```
 - `OS=Linux` overrides the `Windows_NT` env var so the Makefile uses arm-none-eabi-* and `mkdir -p`.
 - `make res` fails silently on Windows: res2gba runs its extensionless converter scripts through
   `os.system` (cmd.exe). `tools/res2gba-win.py` re-routes those calls through the Python interpreter.
 - Repo is checked out with CRLF (`core.autocrlf=true`), so shebang scripts can't run directly; call them
   with `python`. `LINK_MAP=1` writes `bin/output.map`.
-- mGBA locks the ROM it has open: close it before building, or `objcopy` can't write `bin/minicraft.gba`
+- mGBA locks the ROM it has open: close it before building, or `objcopy` can't write `bin/minicraft-expanded-edition.gba`
   (the link still succeeds, so the old ROM silently stays). mGBA keys: X = A, Z = B, Enter = Start.
 
 ## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026, all content implemented)

@@ -22,7 +22,7 @@ _start:
         .word   0xaf3cf087, 0x8be425d6, 0x72ac0a38, 0x07f8d421
 
     @ Game Title
-        .ascii  "MINICRAFTGBA"
+        .ascii  "MINICRAFT EE"
 
     @ Game Code
         .ascii  "ZMCE"
@@ -46,7 +46,8 @@ _start:
         .byte   0x04
 
     @ Header Checksum
-        .byte   0xb7
+    @ -(sum of bytes 0xa0-0xbc) - 0x19: update when the title changes
+        .byte   0xd7
 
     @ Reserved (2 Bytes)
         .space  2, 0x00

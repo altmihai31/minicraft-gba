@@ -128,6 +128,7 @@ static void start_draw(void) {
             BG3_TILEMAP[(x + 8) + (y + 4) * 32] = tile;
         }
     }
+    screen_write("EXPANDED EDITION", 0, 7, 6);
 
     if(can_load) {
         START_WRITE("LOAD GAME", LOAD_GAME, 10, 9);

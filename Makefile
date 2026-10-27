@@ -8,7 +8,7 @@ else
 endif
 
 # === Basic Info ===
-OUT_FILENAME := minicraft
+OUT_FILENAME := minicraft-expanded-edition
 
 SRC_DIR := src
 OBJ_DIR := obj

@@ -1,4 +1,13 @@
-# Minicraft for GBA
+# Minicraft Expanded Edition
+
+A fork of Vulcalien's [Minicraft for GBA](https://github.com/Vulcalien/minicraft-gba) that adds
+Minecraft-style content without using more RAM: 14 new blocks, 40 new items, 9 new mobs (including a
+boss on the deepest level), hunger, armor, experience, enchanting, beds, buckets, fishing and a map.
+See `docs/game-design.md` for the full list. All new art is original.
+
+The rest of this file is the original Minicraft for GBA readme.
+
+## Minicraft for GBA
 
 This is a demake of Minicraft by Markus Persson (aka Notch), a game made
 for Ludum Dare 22 in two days.
