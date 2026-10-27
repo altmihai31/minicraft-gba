@@ -2,7 +2,8 @@
 
 Original sprites for the RAM-free feature list: 14 blocks, 40 item icons, 10 mobs (5 frames each),
 furniture, projectiles and HUD icons. Verified with the project's own build: `make res && make` passes,
-RAM unchanged (IWRAM 93.7 %, EWRAM 97.8 %), ROM 129 KB -> 142 KB, no VRAM overlaps.
+RAM unchanged (EWRAM 97.8 %; the IWRAM figure first quoted here, 93.7 %, came from an older compiler –
+see CLAUDE.md for current numbers), ROM 129 KB -> 142 KB, no VRAM overlaps.
 
 ## Install
 1. Copy `res/` over your fork's `res/` (images, palettes and resources.json).

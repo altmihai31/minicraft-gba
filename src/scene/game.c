@@ -19,6 +19,7 @@
 #include "screen.h"
 #include "mob.h"
 #include "player.h"
+#include "survival.h"
 
 static struct Level *level = NULL;
 
@@ -114,6 +115,9 @@ static inline void draw_status_bar(void) {
         }
         screen_set_bg_palette_color(10, 12, color);
     }
+
+    // hunger, armor and experience
+    survival_draw_status_bar();
 
     // clear active item area
     for(u32 x = 20; x < 30; x++)

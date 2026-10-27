@@ -39,6 +39,7 @@ extern const struct Scene scene_transition;
 extern const struct Scene scene_inventory;
 extern const struct Scene scene_chest;
 extern const struct Scene scene_crafting;
+extern const struct Scene scene_map;
 
 extern const struct Scene scene_pause;
 

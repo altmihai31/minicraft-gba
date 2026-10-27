@@ -112,7 +112,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 1,
 
         .placed_tile = FLOWER_TILE,
-        .placeable_on = { GRASS_TILE, -1 }
+        .placeable_on = { GRASS_TILE, -1, -1 }
     },
 
     // Seeds
@@ -122,7 +122,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 1,
 
         .placed_tile = WHEAT_TILE,
-        .placeable_on = { FARMLAND_TILE, -1 }
+        .placeable_on = { FARMLAND_TILE, -1, -1 }
     },
 
     // Acorn
@@ -132,7 +132,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 0,
 
         .placed_tile = TREE_SAPLING_TILE,
-        .placeable_on = { GRASS_TILE, -1 }
+        .placeable_on = { GRASS_TILE, -1, -1 }
     },
 
     // Cactus
@@ -142,7 +142,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 1,
 
         .placed_tile = CACTUS_SAPLING_TILE,
-        .placeable_on = { SAND_TILE, -1 }
+        .placeable_on = { SAND_TILE, -1, -1 }
     },
 
     // Dirt
@@ -152,7 +152,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 0,
 
         .placed_tile = DIRT_TILE,
-        .placeable_on = { HOLE_TILE, LIQUID_TILE }
+        .placeable_on = { HOLE_TILE, LIQUID_TILE, -1 }
     },
 
     // Sand
@@ -162,7 +162,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 2,
 
         .placed_tile = SAND_TILE,
-        .placeable_on = { GRASS_TILE, DIRT_TILE }
+        .placeable_on = { GRASS_TILE, DIRT_TILE, -1 }
     },
 
     // Cloud
@@ -172,7 +172,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 1,
 
         .placed_tile = CLOUD_TILE,
-        .placeable_on = { INFINITE_FALL_TILE, -1 }
+        .placeable_on = { INFINITE_FALL_TILE, -1, -1 }
     },
 
     // -----
@@ -283,6 +283,328 @@ const struct Item item_list[ITEM_TYPES] = {
         .class = ITEMCLASS_TOOL,
         .name = "HOE",
         .palette = 3
+    },
+
+    // ----- mod items (icon = type + 22) -----
+    // Planks
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "PLANKS",
+        .palette = 0,
+
+        .placed_tile = PLANKS_TILE,
+        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+    },
+
+    // Stone Bricks
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "S.BRCK",
+        .palette = 1,
+
+        .placed_tile = STONE_BRICKS_TILE,
+        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+    },
+
+    // Brick
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "BRICK",
+        .palette = 0,
+
+        .placed_tile = CLAY_BRICKS_TILE,
+        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+    },
+
+    // Clay
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "CLAY",
+        .palette = 1
+    },
+
+    // Obsidian
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "OBSIDN",
+        .palette = 2
+    },
+
+    // Door
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "DOOR",
+        .palette = 0,
+
+        .placed_tile = DOOR_CLOSED_TILE,
+        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+    },
+
+    // Torch
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "TORCH",
+        .palette = 0,
+
+        .placed_tile = TORCH_TILE,
+        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+    },
+
+    // Pumpkin
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "PUMPKN",
+        .palette = 0,
+
+        .placed_tile = PUMPKIN_TILE,
+        .placeable_on = { GRASS_TILE, -1, -1 }
+    },
+
+    // Melon Slice
+    {
+        .class = ITEMCLASS_FOOD,
+        .name = "MELON",
+        .palette = 1,
+
+        .hp_gain = 1
+    },
+
+    // Sugar Cane
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "S.CANE",
+        .palette = 1,
+
+        .placed_tile = SUGAR_CANE_TILE,
+        .placeable_on = { GRASS_TILE, SAND_TILE, -1 }
+    },
+
+    // Paper
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "PAPER",
+        .palette = 1
+    },
+
+    // Mushroom
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "MUSHRM",
+        .palette = 0,
+
+        .placed_tile = MUSHROOM_TILE,
+        .placeable_on = { DIRT_TILE, -1, -1 }
+    },
+
+    // Ice
+    {
+        .class = ITEMCLASS_PLACEABLE,
+        .name = "ICE",
+        .palette = 3,
+
+        .placed_tile = ICE_TILE,
+        .placeable_on = { LIQUID_TILE, -1, -1 }
+    },
+
+    // Raw Meat
+    {
+        .class = ITEMCLASS_FOOD,
+        .name = "R.MEAT",
+        .palette = 0,
+
+        .hp_gain = 1
+    },
+
+    // Cooked Meat
+    {
+        .class = ITEMCLASS_FOOD,
+        .name = "C.MEAT",
+        .palette = 0,
+
+        .hp_gain = 3
+    },
+
+    // Egg
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "EGG",
+        .palette = 0
+    },
+
+    // Mushroom Stew
+    {
+        .class = ITEMCLASS_FOOD,
+        .name = "STEW",
+        .palette = 0,
+
+        .hp_gain = 3
+    },
+
+    // Cake
+    {
+        .class = ITEMCLASS_FOOD,
+        .name = "CAKE",
+        .palette = 0,
+
+        .hp_gain = 4
+    },
+
+    // Leather
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "LEATHR",
+        .palette = 0
+    },
+
+    // Wool
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "WOOL",
+        .palette = 1
+    },
+
+    // Feather
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "FEATHR",
+        .palette = 1
+    },
+
+    // Bone
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "BONE",
+        .palette = 1
+    },
+
+    // String
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "STRING",
+        .palette = 1
+    },
+
+    // Spore Powder
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "SPORES",
+        .palette = 1
+    },
+
+    // Bucket
+    {
+        .class = ITEMCLASS_UTILITY,
+        .name = "BUCKET",
+        .palette = 3
+    },
+
+    // Water Bucket
+    {
+        .class = ITEMCLASS_UTILITY,
+        .name = "W.BUCKET",
+        .palette = 3
+    },
+
+    // Lava Bucket
+    {
+        .class = ITEMCLASS_UTILITY,
+        .name = "L.BUCKET",
+        .palette = 3
+    },
+
+    // Shears
+    {
+        .class = ITEMCLASS_UTILITY,
+        .name = "SHEARS",
+        .palette = 1
+    },
+
+    // Bow
+    {
+        .class = ITEMCLASS_UTILITY,
+        .name = "BOW",
+        .palette = 0
+    },
+
+    // Arrow
+    {
+        .class = ITEMCLASS_MATERIAL,
+        .name = "ARROW",
+        .palette = 3
+    },
+
+    // Fishing Rod
+    {
+        .class = ITEMCLASS_UTILITY,
+        .name = "FISH ROD",
+        .palette = 3
+    },
+
+    // Raw Fish
+    {
+        .class = ITEMCLASS_FOOD,
+        .name = "R.FISH",
+        .palette = 2,
+
+        .hp_gain = 1
+    },
+
+    // Cooked Fish
+    {
+        .class = ITEMCLASS_FOOD,
+        .name = "C.FISH",
+        .palette = 0,
+
+        .hp_gain = 2
+    },
+
+    // Bed
+    {
+        .class = ITEMCLASS_FURNITURE,
+        .name = "BED",
+        .palette = 0
+    },
+
+    // Map
+    {
+        .class = ITEMCLASS_UTILITY,
+        .name = "MAP",
+        .palette = 2
+    },
+
+    // Leather Armor
+    {
+        .class = ITEMCLASS_ARMOR,
+        .name = "LTHR ARMR",
+        .palette = 0
+    },
+
+    // Iron Armor
+    {
+        .class = ITEMCLASS_ARMOR,
+        .name = "IRON ARMR",
+        .palette = 1
+    },
+
+    // Gold Armor
+    {
+        .class = ITEMCLASS_ARMOR,
+        .name = "GOLD ARMR",
+        .palette = 2
+    },
+
+    // Gem Armor
+    {
+        .class = ITEMCLASS_ARMOR,
+        .name = "GEM ARMR",
+        .palette = 3
+    },
+
+    // Enchanting Table
+    {
+        .class = ITEMCLASS_FURNITURE,
+        .name = "ENCHANTER",
+        .palette = 2
     }
 };
 
@@ -313,6 +635,10 @@ void item_write_name(struct item_Data *data, u8 palette, u32 x, u32 y) {
     if(item->class == ITEMCLASS_TOOL) {
         const u8 level = data->tool_level;
 
+        // enchanted tools are written in the title color
+        if(data->enchanted)
+            palette = 10;
+
         screen_write(level_names[level], palette, x, y);
         screen_write(item->name, palette, x + 4 + (level != 4), y);
     } else {
@@ -324,8 +650,7 @@ THUMB
 void item_draw_icon(struct item_Data *data, u32 x, u32 y, bool black_bg) {
     const struct Item *item = ITEM_S(data);
 
-    const u16 tile = 128 + data->type +
-                     (item->class == ITEMCLASS_TOOL) * (2 + data->tool_level * 5);
+    const u16 tile = 128 + item_icon(data->type, data->tool_level);
     const u8 palette = (black_bg == false) * (12 + item->palette) +
                        (black_bg == true) * 11;
 

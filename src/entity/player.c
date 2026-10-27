@@ -24,13 +24,15 @@
 #include "scene.h"
 #include "crafting.h"
 #include "sound.h"
+#include "survival.h"
 
-#define MAX_HP      (10)
-#define MAX_STAMINA (10)
+#define MAX_HP      PLAYER_MAX_HP
+#define MAX_STAMINA PLAYER_MAX_STAMINA
 
 struct player_Data {
-    u16 attack_item : 6;
-    u16 attack_item_tool_level : 4;
+    // 7 bits: item types go up to 72
+    u16 attack_item : 7;
+    u16 attack_item_tool_level : 3;
 
     u16 attack_time : 4;
     u16 attack_dir : 2;
@@ -88,6 +90,8 @@ void entity_add_player(struct Level *level, u8 xt, u8 yt,
 
     player_invulnerable_time = 0;
 
+    survival_reset(reset_inventory);
+
     // reset inventory
     if(reset_inventory) {
         player_inventory.size = 0;
@@ -129,17 +133,13 @@ static inline void player_hurt_entities(struct Level *level, struct entity_Data 
 
             for(u32 i = 0; i < SOLID_ENTITIES_IN_TILE; i++) {
                 const u8 entity_id = level_solid_entities[tile][i];
+                if(entity_id >= ENTITY_LIMIT)
+                    continue;
+
                 struct entity_Data *e_data = &level->entities[entity_id];
-
-                switch(e_data->type) {
-                    case ZOMBIE_ENTITY:
-                    case SLIME_ENTITY:
-                    case AIR_WIZARD_ENTITY:
-                        break;
-
-                    default:
-                        continue;
-                }
+                if(!entity_is_mob(e_data->type) ||
+                   e_data->type == PLAYER_ENTITY)
+                    continue;
 
                 if(entity_intersects(e_data, x0, y0, x1, y1)) {
                     u8 damage = 1 + random(3);
@@ -156,6 +156,10 @@ static inline void player_hurt_entities(struct Level *level, struct entity_Data 
                         damage += 1;
                     }
 
+                    // enchanted weapons hit 50% harder
+                    if(player_active_item_is_enchanted())
+                        damage += damage / 2;
+
                     mob_hurt(level, e_data, damage, dir);
                 }
             }
@@ -163,20 +167,27 @@ static inline void player_hurt_entities(struct Level *level, struct entity_Data 
     }
 }
 
-static inline void player_hurt_tile(struct Level *level, struct entity_Data *data) {
+THUMB
+void player_facing_tile(struct entity_Data *data, i32 *xt, i32 *yt) {
     struct mob_Data *mob_data = (struct mob_Data *) &data->data;
 
     const u8 dir = mob_data->dir;
     const u8 range = 12;
-    i32 xt = (data->x     + ((dir == 3) - (dir == 1)) * range) >> 4;
-    i32 yt = (data->y - 2 + ((dir == 2) - (dir == 0)) * range) >> 4;
+    *xt = (data->x     + ((dir == 3) - (dir == 1)) * range) >> 4;
+    *yt = (data->y - 2 + ((dir == 2) - (dir == 0)) * range) >> 4;
+}
+
+static inline void player_hurt_tile(struct Level *level, struct entity_Data *data) {
+    i32 xt, yt;
+    player_facing_tile(data, &xt, &yt);
 
     if(xt < 0 || xt >= LEVEL_W || yt < 0 || yt >= LEVEL_H)
         return;
 
-    const struct Tile *tile = LEVEL_GET_TILE_S(level, xt, yt);
-    if(tile->interact)
-        tile->interact(level, xt, yt, &player_active_item);
+    const tile_interact_fn interact =
+        tile_interact_list[LEVEL_GET_TILE(level, xt, yt)];
+    if(interact)
+        interact(level, xt, yt, &player_active_item);
 }
 
 static inline void player_take_furniture(struct Level *level, struct entity_Data *data) {
@@ -192,18 +203,8 @@ static inline void player_take_furniture(struct Level *level, struct entity_Data
     for(u32 i = 0; i < ENTITY_LIMIT; i++) {
         struct entity_Data *e_data = &level->entities[i];
 
-        switch(e_data->type) {
-            case WORKBENCH_ENTITY:
-            case FURNACE_ENTITY:
-            case OVEN_ENTITY:
-            case ANVIL_ENTITY:
-            case CHEST_ENTITY:
-            case LANTERN_ENTITY:
-                break;
-
-            default:
-                continue;
-        }
+        if(!entity_is_furniture(e_data->type))
+            continue;
 
         if(entity_intersects(e_data, x0, y0, x1, y1)) {
             // add the power glove to the inventory
@@ -223,12 +224,18 @@ static inline void player_eat(struct Level *level, struct entity_Data *data) {
     struct mob_Data *mob_data = (struct mob_Data *) &data->data;
     const struct Item *item = ITEM_S(&player_active_item);
 
-    if(mob_data->hp < MAX_HP && player_pay_stamina(5)) {
+    const bool hungry = (player_hunger < MAX_HUNGER);
+    if((mob_data->hp < MAX_HP || hungry) && player_pay_stamina(5)) {
         // FIXED BUG - Mob.java:91
         // eating while hurt, the food is used but hp is not recovered
         mob_data->hp += item->hp_gain;
         if(mob_data->hp > MAX_HP)
             mob_data->hp = MAX_HP;
+
+        // food also fills hunger, two points per HP
+        player_hunger += item->hp_gain * 2;
+        if(player_hunger > MAX_HUNGER)
+            player_hunger = MAX_HUNGER;
 
         entity_add_text_particle(level, data->x, data->y, item->hp_gain, 2);
 
@@ -250,6 +257,10 @@ static inline void player_place(struct Level *level, struct entity_Data *data) {
     // even if it's out of bounds, it's ok
     // because nothing can be placed on rock
     u8 tile = LEVEL_GET_TILE(level, xt, yt);
+
+    // the liquid of the deepest level is lava: ice can't go there
+    if(item->placed_tile == ICE_TILE && level == &levels[0])
+        return;
 
     for(u32 i = 0; i < sizeof(item->placeable_on); i++) {
         if(tile == item->placeable_on[i]) {
@@ -282,7 +293,9 @@ static inline void player_place_furniture(struct Level *level, struct entity_Dat
     }
 }
 
-static inline void player_attack(struct Level *level, struct entity_Data *data) {
+// Runs from ROM (only on a button press): keeps IWRAM free
+THUMB
+static NO_INLINE void player_attack(struct Level *level, struct entity_Data *data) {
     struct mob_Data *mob_data = (struct mob_Data *) &data->data;
     struct player_Data *player_data = (struct player_Data *) &mob_data->data;
 
@@ -290,6 +303,22 @@ static inline void player_attack(struct Level *level, struct entity_Data *data) 
 
     const u8 item_class = (player_active_item.type < ITEM_TYPES) ?
                           ITEM_S(&player_active_item)->class : -1;
+
+    // Hand and tools reach doors through 'player_hurt_tile'. Items that
+    // don't act on what is in front (food, armor, bow, map...) keep
+    // their action; the others open or close a door in front.
+    if(item_class == ITEMCLASS_MATERIAL   ||
+       item_class == ITEMCLASS_PLACEABLE  ||
+       item_class == ITEMCLASS_FURNITURE  ||
+       item_class == ITEMCLASS_POWERGLOVE) {
+        i32 xt, yt;
+        player_facing_tile(data, &xt, &yt);
+
+        if(tile_toggle_door(level, xt, yt)) {
+            player_data->attack_time = 0;
+            return;
+        }
+    }
 
     // set attack item before the action: the item could change
     player_data->attack_item = player_active_item.type;
@@ -324,6 +353,12 @@ static inline void player_attack(struct Level *level, struct entity_Data *data) 
         case ITEMCLASS_FURNITURE:
             player_place_furniture(level, data);
             break;
+
+        case ITEMCLASS_MATERIAL:
+        case ITEMCLASS_UTILITY:
+        case ITEMCLASS_ARMOR:
+            item_use(level, data);
+            break;
     }
 }
 
@@ -336,7 +371,8 @@ static inline void player_attack(struct Level *level, struct entity_Data *data) 
         set_scene(&scene_crafting, 1);\
     } while(0)
 
-static inline bool player_use(struct Level *level, struct entity_Data *data) {
+THUMB
+static NO_INLINE bool player_use(struct Level *level, struct entity_Data *data) {
     struct mob_Data *mob_data = (struct mob_Data *) &data->data;
 
     const u8 dir = mob_data->dir;
@@ -348,6 +384,8 @@ static inline bool player_use(struct Level *level, struct entity_Data *data) {
 
     for(u32 i = 0; i < ENTITY_LIMIT; i++) {
         struct entity_Data *e_data = &level->entities[i];
+        if(e_data->type >= ENTITY_TYPES)
+            continue;
 
         if(entity_intersects(e_data, x0, y0, x1, y1)) {
             bool found = true;
@@ -367,6 +405,11 @@ static inline bool player_use(struct Level *level, struct entity_Data *data) {
                 case CHEST_ENTITY:
                     furniture_set_opened_chest(e_data);
                     set_scene(&scene_chest, 1);
+                    break;
+
+                case BED_ENTITY:
+                case ENCHANT_TABLE_ENTITY:
+                    item_use_furniture(level, data, e_data);
                     break;
 
                 default:
@@ -390,6 +433,8 @@ ETICK(player_tick) {
 
     player_tick_time++;
     mob_tick(level, data);
+
+    survival_player_tick(level, data);
 
     if(player_invulnerable_time > 0)
         player_invulnerable_time--;
@@ -457,6 +502,10 @@ ETICK(player_tick) {
         swim_move_flag ^= (on_tile == LIQUID_TILE);
         swim_move_flag &= (on_tile == LIQUID_TILE);
 
+        // ice keeps the player sliding
+        if(on_tile == ICE_TILE)
+            survival_ice_slide(&xm, &ym);
+
         if(!swim_move_flag)
             mob_move(level, data, xm, ym);
     }
@@ -487,7 +536,9 @@ static inline void draw_furniture(u16 x, u16 y, u32 used_sprites) {
         .size = SPRITE_SIZE_16x16,
         .flip = 0,
 
-        .tile = 148 + 4 * (player_active_item.type - WORKBENCH_ITEM),
+        .tile = furniture_sprite(
+            furniture_item_to_entity(player_active_item.type)
+        ),
         .palette = 6
     });
 }
@@ -524,8 +575,7 @@ static inline void draw_item(u16 x, u16 y, struct player_Data *player_data,
 
     const struct Item *item = &item_list[item_type];
 
-    const u16 tile = 256 + item_type +
-        (item->class == ITEMCLASS_TOOL) * (2 + item_tool_level * 5);
+    const u16 tile = 256 + item_icon(item_type, item_tool_level);
 
     sprite_config(used_sprites, &(struct Sprite) {
         .x = x - level_x_offset,

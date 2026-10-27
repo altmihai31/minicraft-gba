@@ -27,11 +27,11 @@
 
 // CONNECTS_TO_X
 #define CONNECTS_TO_GRASS(level, xt, yt)\
-    (LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.grass)
+    ((bool) LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.grass)
 #define CONNECTS_TO_SAND(level, xt, yt)\
-    (LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.sand)
+    ((bool) LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.sand)
 #define CONNECTS_TO_LIQUID(level, xt, yt)\
-    (LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.liquid)
+    ((bool) LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.liquid)
 
 FDRAW(grass_draw) {
     bool u = CONNECTS_TO_GRASS(level, xt,     yt - 1);
@@ -482,6 +482,11 @@ static inline void draw_tile(struct Level *level, u32 xt, u32 yt,
             break;
         case CLOUD_CACTUS_TILE:
             CALL(ore_draw);
+            break;
+
+        // mod tiles are drawn from ROM
+        default:
+            mod_tile_draw(level, xt, yt, tiles);
             break;
     }
 }

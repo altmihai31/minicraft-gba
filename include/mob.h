@@ -51,4 +51,7 @@ extern void mob_slime_die(struct Level *level, struct entity_Data *data);
 extern void mob_air_wizard_die(struct Level *level, struct entity_Data *data);
 extern void mob_player_die(struct Level *level, struct entity_Data *data);
 
+// drops and score of the mod mobs (src/entity/mod-mobs.c)
+extern void mob_mod_die(struct Level *level, struct entity_Data *data);
+
 #endif // MINICRAFT_MOB

@@ -29,26 +29,33 @@ make build OS=Linux                                                # Makefile's 
   `os.system` (cmd.exe). `tools/res2gba-win.py` re-routes those calls through the Python interpreter.
 - Repo is checked out with CRLF (`core.autocrlf=true`), so shebang scripts can't run directly; call them
   with `python`. `LINK_MAP=1` writes `bin/output.map`.
+- mGBA locks the ROM it has open: close it before building, or `objcopy` can't write `bin/minicraft.gba`
+  (the link still succeeds, so the old ROM silently stays). mGBA keys: X = A, Z = B, Enter = Start.
 
-## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026)
-- **EWRAM 97.8 % full** (256 384 B used, 5 760 B free): 5 levels 143 290 B, collision table
+## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026, all content implemented)
+- **EWRAM 97.8 % full** (256 468 B used, ~5 670 B free): 5 levels 143 290 B, collision table
   `level_solid_entities` 100 352 B, 32 chests 12 352 B. Do NOT grow world size, level count, chest count or entity cap.
-- **IWRAM 97.89 %** (32 076 B: `.iwram` 31 340 B code + `.bss` 732 B; identical on pristine upstream HEAD –
-  the old 93.7 % figure came from an older compiler). Data ends at `0x03007D4C`, user stack starts at
-  `0x03007F00` (top 256 B reserved for IRQ stacks) -> **only ~436 B of stack**, with no overflow check:
-  a deep call chain silently corrupts the end of `.bss`. Any IWRAM growth comes straight out of the stack.
-- New code goes in ROM. `ETICK`/`EDRAW` macros put entity code in IWRAM by default – new entities must opt out.
+- **IWRAM 92.5 %** (30 324 B). Data ends at `0x03007674`, user stack starts at `0x03007F00` (top 256 B
+  reserved for IRQ stacks) -> **~2 190 B of stack**, no overflow check. Upstream HEAD was 97.9 % / 436 B:
+  the fork freed IWRAM by moving `player_attack`/`player_use` to ROM and shrinking `struct Tile` to 8 B
+  (`interact` pointers now live in the ROM table `tile_interact_list`).
+- Any plain global/static goes to IWRAM `.bss`: put new ones in EWRAM with `SBSS_SECTION`.
+- New code goes in ROM. `ETICK`/`EDRAW` put entity code in IWRAM – mod entities use `ETICK_ROM`/`EDRAW_ROM`.
 - `level_tick`/`level_draw` are `IWRAM_SECTION` and `tick/tiles.c` + `draw/tiles.c` are `#include`d into
-  level.c as `static inline`, so every new tile `case` lands in IWRAM. Route new tiles through one
-  `NO_INLINE` ROM dispatcher (e.g. the switch's `default:`). Largest IWRAM users: `level_draw` 10.8 KB,
-  `player_tick` 3.8 KB, `game_draw` 1.6 KB.
-- ROM: 146 280 B with the art pack (upstream 133 456 B).
+  level.c as `static inline`, so every tile `case` there lands in IWRAM. Mod tiles go through the `default:`
+  branch into `src/mod-tiles.c` (ROM). Largest IWRAM users: `level_draw` 10.8 KB, `game_draw` 1.6 KB.
+- ROM: 171 204 B (upstream 133 456 B).
 - Tile = 1 B type + 1 B data. Data byte holds damage/growth/etc., so a placed block can't remember what was
   under it -> broken placed blocks become dirt (plants -> grass).
-- Entity state: 8 bytes (`data[8]`). Limit 255 entities per level shared by mobs, items, particles.
-- **Saves:** RLE into 64 KB Flash and `storage.c` silently truncates on overflow. First change of the fork:
-  switch to `BACKUP_FLASH_128KB` + `STORAGE_SIZE` 128 KB and add a save-version byte (breaks old saves).
+- Entity state: 8 bytes (`data[8]`); mobs get 2 bytes after `struct mob_Data`. Limit 255 entities per level
+  shared by mobs, items, particles. Item types go up to 72: bitfields holding one need 7 bits.
+- **Saves:** 128 KB Flash (`BACKUP_FLASH_128KB`), save version byte at 0x1C (`SAVE_VERSION` in storage.c –
+  bump it whenever the layout changes; other versions show as no save). The backup driver takes 16-bit
+  offsets, so storage.c switches the two 64 KB banks itself (`flash_read_at`/`flash_write_at`). The game
+  code is written last; a save that doesn't fit is left invalid and the pause menu says "SAVE FAILED".
+  A fresh world uses ~20 KB.
 - Liquid tile is water everywhere except the deepest level (index 0), where it is lava.
+- `options.keep_inventory` defaults to true: death keeps inventory, armor and XP.
 
 ## Palette rule (most common mistake)
 res2gba stores each tile's colours relative to the **first** palette row that contains all of its colours.
@@ -71,15 +78,17 @@ Note: dirt reuses the grass tiles drawn with palette 8; all three ores share cel
 - Regenerate/edit art: `tools/art-source/` (pixel grids as strings; build_art.py verifies palette rows).
 
 ## Design spec
-See `docs/game-design.md` for break rules, drops, item behaviour, food, armor and recipes.
-Implement breaking as ONE data table + one generic interact function, not one function per block.
+See `docs/game-design.md` for break rules, drops, item behaviour, food, armor and recipes. Everything in it is
+implemented; its "Implementation notes" section lists where the code differs from the spec.
 
-## Suggested order
-1. 128 KB save + version byte
-2. Coal ore, planks, door, torch (blocks + break table)
-3. Passive animals + drops + cooked food
-4. Skeleton + bow/arrows
-5. Hunger / armor HUD, then the rest of the list in docs/game-design.md
+## Where the mod code lives
+- `src/tile.c`: `block_breaks` table + `block_interact` (the one break rule for mod blocks), doors.
+- `src/mod-tiles.c`: drawing, ticking (sugar cane, spawners) and torch light of mod tiles.
+- `src/entity/mod-mobs.c`: all 9 mobs – one `mod_mobs` table, shared tick/draw/touch, drops, spawn choice.
+- `src/entity/projectiles.c`: arrows and XP orbs. Bed/enchanting table: `src/entity/furniture.c`.
+- `src/item-use.c`: bucket, shears, bow, fishing rod, map, armor, bone, bed, enchanting table.
+- `src/survival.c`: hunger, armor, XP, bed spawn point, ice sliding, fishing, HUD.
+- `src/scene/map.c`: map item. World generation of mod content: end of `src/generator.c`.
 
 ## Owner preferences
 Technically precise, no-preamble answers; direct pushback when something is a bad idea; metric units;

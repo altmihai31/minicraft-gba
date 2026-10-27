@@ -21,7 +21,7 @@
 #include "level.h"
 #include "item.h"
 
-#define TILE_TYPES (22)
+#define TILE_TYPES (36)
 
 #define GRASS_TILE          (0)
 #define ROCK_TILE           (1)
@@ -46,25 +46,57 @@
 #define GEM_ORE_TILE        (20)
 #define CLOUD_CACTUS_TILE   (21)
 
+// Mod tiles: the ID is also the cell in level.png (tiles 4*ID..4*ID+3)
+#define FIRST_MOD_TILE      (22)
+#define COAL_ORE_TILE       (22)
+#define OBSIDIAN_TILE       (23)
+#define PLANKS_TILE         (24)
+#define STONE_BRICKS_TILE   (25)
+#define CLAY_BRICKS_TILE    (26)
+#define DOOR_CLOSED_TILE    (27)
+#define DOOR_OPEN_TILE      (28)
+#define PUMPKIN_TILE        (29)
+#define MELON_TILE          (30)
+#define SUGAR_CANE_TILE     (31)
+#define MUSHROOM_TILE       (32)
+#define TORCH_TILE          (33)
+#define SPAWNER_TILE        (34)
+#define ICE_TILE            (35)
+
+// Kept small: this table lives in IWRAM.
 struct Tile {
     bool is_solid;
     u8 may_pass;
 
     u8 touch_damage;
 
+    struct {
+        u8 grass  : 1;
+        u8 sand   : 1;
+        u8 liquid : 1;
+    } connects_to;
+
     void (*stepped_on)(struct Level *level, u32 xt, u32 yt,
                        struct entity_Data *entity_data);
-
-    void (*interact)(struct Level *level, u32 xt, u32 yt,
-                     struct item_Data *item);
-
-    struct {
-        bool grass;
-        bool sand;
-        bool liquid;
-    } connects_to;
 };
 
+static_assert(sizeof(struct Tile) == 8, "struct Tile: wrong size");
+
 extern const struct Tile tile_list[TILE_TYPES];
+
+typedef void (*tile_interact_fn)(struct Level *level, u32 xt, u32 yt,
+                                 struct item_Data *item);
+
+// in ROM: only used when the player hits a tile
+extern const tile_interact_fn tile_interact_list[TILE_TYPES];
+
+// mod tiles (src/mod-tiles.c, in ROM)
+extern void mod_tile_draw(struct Level *level, u32 xt, u32 yt,
+                          u16 tiles[4]);
+extern void mod_tile_tick(struct Level *level, u32 xt, u32 yt);
+extern void mod_tile_draw_torch_light(struct Level *level);
+
+// open or close a door at (xt, yt), if there is one
+extern bool tile_toggle_door(struct Level *level, u32 xt, u32 yt);
 
 #endif // MINICRAFT_TILE

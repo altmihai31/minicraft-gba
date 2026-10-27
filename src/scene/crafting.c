@@ -24,8 +24,13 @@
 
 static i32 selected;
 
-static u8 sorted_recipes[16];
-static bool can_craft[16];
+SBSS_SECTION
+static u8 sorted_recipes[MAX_RECIPES];
+SBSS_SECTION
+static bool can_craft[MAX_RECIPES];
+
+static_assert(WORKBENCH_RECIPES <= MAX_RECIPES, "too many recipes");
+static_assert(ANVIL_RECIPES     <= MAX_RECIPES, "too many recipes");
 
 static u16 crafting_count(struct Inventory *inventory,
                           u8 item_type, u8 tool_level) {

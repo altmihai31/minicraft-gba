@@ -31,12 +31,18 @@ struct crafting_Recipe {
     u8 result;
 
     u8 tool_level;
+
+    // how many resources the recipe makes (0 means 1)
+    u8 result_count;
 };
 
-#define WORKBENCH_RECIPES (16)
-#define FURNACE_RECIPES   (3)
-#define OVEN_RECIPES      (1)
-#define ANVIL_RECIPES     (15)
+#define WORKBENCH_RECIPES (27)
+#define FURNACE_RECIPES   (4)
+#define OVEN_RECIPES      (5)
+#define ANVIL_RECIPES     (21)
+
+// size of the crafting menu's buffers
+#define MAX_RECIPES (32)
 
 extern const struct crafting_Recipe workbench_recipes[WORKBENCH_RECIPES];
 extern const struct crafting_Recipe furnace_recipes[FURNACE_RECIPES];

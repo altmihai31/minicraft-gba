@@ -24,6 +24,7 @@
 #include "item.h"
 #include "player.h"
 #include "air-wizard.h"
+#include "survival.h"
 
 /*
          Storage Layout
@@ -50,7 +51,7 @@
     |                      |
     |      Tile Data       |
     |                      |
-    +----------------------+ 1 0000
+    +----------------------+ 2 0000
 
 * Header:
       4 B - game code (ZMCE)
@@ -70,14 +71,28 @@
       1 B - air wizard attack delay
       1 B - air wizard attack time
 
-      4 B - padding
+      1 B - save version
+      3 B - padding
 
       1 B - keep inventory option
 
-     31 B - padding
+      1 B - hunger
+      1 B - armor
+      1 B - spawn level
+      1 B - spawn x
+      1 B - spawn y
+      2 B - experience
+      2 B - hunger timer
+
+     22 B - padding
 */
 
-#define STORAGE_SIZE (64 * 1024)
+#define STORAGE_SIZE (128 * 1024)
+
+// Increase when the layout changes: saves with a different version are
+// treated as missing.
+#define SAVE_VERSION (1)
+#define SAVE_VERSION_OFFSET (0x001c)
 
 #define HEADER_SIZE 64
 
@@ -85,17 +100,72 @@
 #define BYTES_PER_ITEM 3
 #define BYTES_PER_ENTITY (sizeof(struct entity_Data))
 
+// The backup driver takes 16-bit offsets: 128 KB Flash is two 64 KB
+// banks, selected explicitly. 'selected_bank' caches the current one.
+SBSS_SECTION
+static i8 selected_bank;
+
+#define RESET_BANK() (selected_bank = -1)
+
+THUMB
+static NO_INLINE void select_bank(u32 bank) {
+    if(selected_bank != (i8) bank) {
+        backup_bank(bank);
+        selected_bank = bank;
+    }
+}
+
+THUMB
+static NO_INLINE void flash_read_at(u32 offset, void *buffer, u32 n) {
+    u8 *bytes = buffer;
+    while(n > 0) {
+        u32 chunk = 0x10000 - (offset & 0xffff);
+        if(chunk > n)
+            chunk = n;
+
+        select_bank(offset >> 16);
+        backup_read(offset & 0xffff, bytes, chunk);
+
+        offset += chunk;
+        bytes  += chunk;
+        n      -= chunk;
+    }
+}
+
+THUMB
+static NO_INLINE void flash_write_at(u32 offset, const void *buffer, u32 n) {
+    const u8 *bytes = buffer;
+    while(n > 0) {
+        u32 chunk = 0x10000 - (offset & 0xffff);
+        if(chunk > n)
+            chunk = n;
+
+        select_bank(offset >> 16);
+        backup_write(offset & 0xffff, bytes, chunk);
+
+        offset += chunk;
+        bytes  += chunk;
+        n      -= chunk;
+    }
+}
+
 THUMB
 bool storage_check(void) {
     backup_identify();
+    RESET_BANK();
 
     // check if game code (ZMCE) is present
     u8 code[4];
-    backup_read(0x0000, &code, 4);
+    flash_read_at(0x0000, &code, 4);
+
+    u8 version;
+    flash_read_at(SAVE_VERSION_OFFSET, &version, 1);
+
     return code[0] == 'Z' &&
            code[1] == 'M' &&
            code[2] == 'C' &&
-           code[3] == 'E';
+           code[3] == 'E' &&
+           version == SAVE_VERSION;
 }
 
 THUMB
@@ -103,11 +173,11 @@ bool storage_verify_checksum(void) {
     u32 val = 0;
 
     u32 checksum_in_file;
-    backup_read(0x0004, &checksum_in_file, 4);
+    flash_read_at(0x0004, &checksum_in_file, 4);
 
     u8 buffer[8];
     for(u32 i = 0x0008; i < STORAGE_SIZE; i += sizeof(buffer)) {
-        backup_read(i, buffer, sizeof(buffer));
+        flash_read_at(i, buffer, sizeof(buffer));
         for(u32 b = 0; b < sizeof(buffer); b++)
             val += buffer[b];
     }
@@ -118,13 +188,13 @@ bool storage_verify_checksum(void) {
 THUMB
 void storage_srand(void) {
     u32 seed;
-    backup_read(0x0008, &seed, 4);
+    flash_read_at(0x0008, &seed, 4);
     random_seed(seed);
 }
 
 THUMB
 void storage_load_options(void) {
-    backup_read(0x0020, &options, sizeof(struct Options));
+    flash_read_at(0x0020, &options, sizeof(struct Options));
 }
 
 /* ================================================================== */
@@ -132,14 +202,14 @@ void storage_load_options(void) {
 /* ================================================================== */
 
 static INLINE u32 load_item(u32 offset, struct item_Data *data) {
-    backup_read(offset, &data->type, 1);
-    backup_read(offset + 1, &data->count, 2);
+    flash_read_at(offset, &data->type, 1);
+    flash_read_at(offset + 1, &data->count, 2);
     return offset + BYTES_PER_ITEM;
 }
 
 THUMB
 static NO_INLINE u32 load_inventory(u32 offset, struct Inventory *inventory) {
-    backup_read(offset++, &inventory->size, 1);
+    flash_read_at(offset++, &inventory->size, 1);
     for(u32 i = 0; i < inventory->size; i++) {
         struct item_Data *item = &inventory->items[i];
         offset = load_item(offset, item);
@@ -150,34 +220,57 @@ static NO_INLINE u32 load_inventory(u32 offset, struct Inventory *inventory) {
 static INLINE u32 load_header(u32 offset) {
     offset += 12; // skip game code, checksum and seed
 
-    backup_read(offset, &score, 4);
+    flash_read_at(offset, &score, 4);
     offset += 4;
 
-    backup_read(offset, &gametime, 4);
+    flash_read_at(offset, &gametime, 4);
     offset += 4;
 
-    backup_read(offset, &player_stamina, 1);
+    flash_read_at(offset, &player_stamina, 1);
     offset += 1;
 
-    backup_read(offset, &player_stamina_recharge_delay, 1);
+    flash_read_at(offset, &player_stamina_recharge_delay, 1);
     offset += 1;
 
-    backup_read(offset, &player_invulnerable_time, 2);
+    flash_read_at(offset, &player_invulnerable_time, 2);
     offset += 2;
 
-    backup_read(offset, &current_level, 1);
+    flash_read_at(offset, &current_level, 1);
     offset += 1;
 
-    backup_read(offset, &chest_count, 1);
+    flash_read_at(offset, &chest_count, 1);
     offset += 1;
 
-    backup_read(offset, &air_wizard_attack_delay, 1);
+    flash_read_at(offset, &air_wizard_attack_delay, 1);
     offset += 1;
 
-    backup_read(offset, &air_wizard_attack_time, 1);
+    flash_read_at(offset, &air_wizard_attack_time, 1);
     offset += 1;
 
-    // stop here: do not load options again
+    // skip version and options: options are loaded separately
+    offset = 0x0021;
+
+    flash_read_at(offset, &player_hunger, 1);
+    offset += 1;
+
+    flash_read_at(offset, &player_armor, 1);
+    offset += 1;
+
+    flash_read_at(offset, &spawn_level, 1);
+    offset += 1;
+
+    flash_read_at(offset, &spawn_xt, 1);
+    offset += 1;
+
+    flash_read_at(offset, &spawn_yt, 1);
+    offset += 1;
+
+    flash_read_at(offset, &player_xp, 2);
+    offset += 2;
+
+    flash_read_at(offset, &player_hunger_timer, 2);
+    offset += 2;
+
     return HEADER_SIZE;
 }
 
@@ -190,7 +283,7 @@ static INLINE u32 load_chests(u32 offset) {
 }
 
 static INLINE u32 load_entity(u32 offset, struct entity_Data *data) {
-    backup_read(offset, data, BYTES_PER_ENTITY);
+    flash_read_at(offset, data, BYTES_PER_ENTITY);
     return offset + BYTES_PER_ENTITY;
 }
 
@@ -203,7 +296,7 @@ static INLINE u32 load_entities(u32 offset) {
 
         // read entity count and load that many entities
         u8 count;
-        backup_read(offset++, &count, 1);
+        flash_read_at(offset++, &count, 1);
         for(u32 e = 1; e < 1 + count; e++) {
             struct entity_Data *data = &level->entities[e];
             offset = load_entity(offset, data);
@@ -218,7 +311,7 @@ static INLINE u32 load_entities(u32 offset) {
 
 static INLINE u32 read_RLE_tuple(u32 offset, i32 *val, i32 *run_length) {
     u8 buffer[2];
-    backup_read(offset, buffer, sizeof(buffer));
+    flash_read_at(offset, buffer, sizeof(buffer));
 
     *val = buffer[0];
     *run_length = 1 + buffer[1];
@@ -265,6 +358,8 @@ static INLINE u32 load_tiles(u32 offset) {
 
 THUMB
 void storage_load(void) {
+    RESET_BANK();
+
     u32 offset = load_header(0);
 
     offset = load_item(offset, &player_active_item);
@@ -283,13 +378,13 @@ static u32 checksum;
 
 static INLINE void write_8(u32 offset, u8 val) {
     checksum += val;
-    backup_write(offset, &val, 1);
+    flash_write_at(offset, &val, 1);
 }
 
 static INLINE void write_16(u32 offset, u16 val) {
     checksum += val & 0xff;
     checksum += (val >> 8) & 0xff;
-    backup_write(offset, &val, 2);
+    flash_write_at(offset, &val, 2);
 }
 
 static INLINE void write_32(u32 offset, u32 val) {
@@ -297,7 +392,7 @@ static INLINE void write_32(u32 offset, u32 val) {
     checksum += (val >> 8)  & 0xff;
     checksum += (val >> 16) & 0xff;
     checksum += (val >> 24) & 0xff;
-    backup_write(offset, &val, 4);
+    flash_write_at(offset, &val, 4);
 }
 
 static INLINE u32 padding(u32 offset, u32 dest) {
@@ -322,8 +417,7 @@ static NO_INLINE u32 store_inventory(u32 offset, struct Inventory *inventory) {
 }
 
 static INLINE u32 store_header(u32 offset) {
-    // write game code (without updating checksum)
-    backup_write(offset, "ZMCE", 4);
+    // skip game code: it is written last, once the save is complete
     offset += 4;
 
     // skip checksum
@@ -360,9 +454,33 @@ static INLINE u32 store_header(u32 offset) {
     write_8(offset, air_wizard_attack_time);
     offset += 1;
 
+    write_8(offset, SAVE_VERSION);
+    offset += 1;
+
     offset = padding(offset, 0x0020);
     write_8(offset, options.keep_inventory);
     offset += 1;
+
+    write_8(offset, player_hunger);
+    offset += 1;
+
+    write_8(offset, player_armor);
+    offset += 1;
+
+    write_8(offset, spawn_level);
+    offset += 1;
+
+    write_8(offset, spawn_xt);
+    offset += 1;
+
+    write_8(offset, spawn_yt);
+    offset += 1;
+
+    write_16(offset, player_xp);
+    offset += 2;
+
+    write_16(offset, player_hunger_timer);
+    offset += 2;
 
     return padding(offset, HEADER_SIZE);
 }
@@ -380,7 +498,7 @@ static INLINE u32 store_entity(u32 offset, struct entity_Data *data) {
     for(u32 i = 0; i < BYTES_PER_ENTITY; i++)
         checksum += ((u8 *) data)[i];
 
-    backup_write(offset, data, BYTES_PER_ENTITY);
+    flash_write_at(offset, data, BYTES_PER_ENTITY);
     return offset + BYTES_PER_ENTITY;
 }
 
@@ -442,7 +560,7 @@ static NO_INLINE u32 write_array_RLE(u8 *array, u32 size, u32 offset) {
     }
 
     // write the last tuple and return (offset + bytes-used)
-    return write_RLE_tuple(offset, array[size], run_length);
+    return write_RLE_tuple(offset, array[size - 1], run_length);
 }
 
 static INLINE u32 store_tiles(u32 offset) {
@@ -461,8 +579,9 @@ static INLINE u32 store_tiles(u32 offset) {
 }
 
 THUMB
-void storage_save(void) {
+bool storage_save(void) {
     backup_erase_chip();
+    RESET_BANK();
     checksum = 0;
 
     u32 offset = store_header(0);
@@ -474,6 +593,15 @@ void storage_save(void) {
     offset = store_entities(offset);
     offset = store_tiles(offset);
 
+    // The world did not fit: the file is truncated and must not be
+    // loaded, so leave the game code erased.
+    if(offset >= STORAGE_SIZE)
+        return false;
+
     padding(offset, STORAGE_SIZE);
-    backup_write(0x0004, &checksum, 4);
+    flash_write_at(0x0004, &checksum, 4);
+
+    // write game code (without updating checksum)
+    flash_write_at(0x0000, "ZMCE", 4);
+    return true;
 }

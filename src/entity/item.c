@@ -21,8 +21,14 @@
 #include "sound.h"
 
 struct item_entity_Data {
-    u16 item_type : 6;
+    // 7 bits: item types go up to 72
+    u16 item_type : 7;
+
+    // 6 zz = 1 z
+    i16 zz : 9;
+
     u16 time : 10;
+    i16 zv : 6;
 
     // 64 xx = 1 x
     i8 xx;
@@ -31,10 +37,6 @@ struct item_entity_Data {
     // 64 yy = 1 y
     i8 yy;
     i8 yv;
-
-    // 6 zz = 1 z
-    i16 zz : 10;
-    i16 zv : 6;
 };
 
 static_assert(
@@ -150,7 +152,7 @@ EDRAW(item_draw) {
             return 0;
 
     const struct Item *item = &item_list[item_entity_data->item_type];
-    const u16 sprite = 256 + item_entity_data->item_type;
+    const u16 sprite = 256 + item_icon(item_entity_data->item_type, 0);
 
     // draw item sprite
     sprite_config(used_sprites, &(struct Sprite) {

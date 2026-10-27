@@ -21,6 +21,7 @@
 #include "entity.h"
 #include "tile.h"
 #include "sound.h"
+#include "survival.h"
 
 static u8 death_time;
 
@@ -68,19 +69,29 @@ static inline void get_spawn_location(struct Level *level,
 }
 
 static inline void respawn(void) {
-    struct Level *level = &levels[3];
-    current_level = 3;
+    // respawn at the last bed used, if its spot is still free
+    bool use_bed = (spawn_level < 5);
+    if(use_bed) {
+        const struct Tile *tile =
+            LEVEL_GET_TILE_S(&levels[spawn_level], spawn_xt, spawn_yt);
+        use_bed = !tile->is_solid;
+    }
 
-    // remove all hostile entities from the level
+    current_level = use_bed ? spawn_level : 3;
+    struct Level *level = &levels[current_level];
+
+    // remove all hostile entities from the level (but not the boss)
     for(u32 i = 1; i < ENTITY_LIMIT; i++) {
         struct entity_Data *data = &level->entities[i];
-        if(data->type == ZOMBIE_ENTITY || data->type == SLIME_ENTITY)
+        if(entity_is_hostile(data->type) &&
+           data->type != MAGMA_GOLEM_ENTITY)
             data->type = -1;
     }
 
     // choose a new spawn position
-    u32 spawn_x = 0, spawn_y = 0;
-    get_spawn_location(level, &spawn_x, &spawn_y);
+    u32 spawn_x = spawn_xt, spawn_y = spawn_yt;
+    if(!use_bed)
+        get_spawn_location(level, &spawn_x, &spawn_y);
 
     entity_add_player(
         level,

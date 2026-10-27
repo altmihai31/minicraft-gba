@@ -368,6 +368,9 @@ void level_draw(struct Level *level) {
     draw_tiles(level);
     draw_entities(level);
 
+    if(level < &levels[3])
+        mod_tile_draw_torch_light(level);
+
     if(level == &levels[0])
         draw_lava_light(level);
 }
@@ -451,8 +454,5 @@ void level_try_spawn(struct Level *level, u8 level_index) {
     else
         entity_level = random(4 - level_index);
 
-    if(random(2))
-        entity_add_slime(level, x, y, entity_level);
-    else
-        entity_add_zombie(level, x, y, entity_level);
+    entity_spawn_random_mob(level, x, y, level_index, entity_level);
 }

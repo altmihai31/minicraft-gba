@@ -24,15 +24,20 @@ static u8 selected_answer;
 
 static bool should_save = false;
 
+// set when the world did not fit into the save file
+SBSS_SECTION
+static bool save_failed;
+
 THUMB
 static void pause_init(u8 flags) {
     ask_overwrite = false;
+    save_failed = false;
 }
 
 THUMB
 static void pause_tick(void) {
     if(should_save) {
-        storage_save();
+        save_failed = !storage_save();
         SOUND_PLAY(sound_start);
 
         should_save = false;
@@ -89,6 +94,9 @@ static void pause_draw(void) {
 
     if(should_save) {
         screen_write("SAVING...", 6, pause_x + 5, pause_y + 5);
+    } else if(save_failed) {
+        screen_write("SAVE FAILED:", 2, pause_x + 3, pause_y + 4);
+        screen_write("WORLD TOO BIG", 2, pause_x + 2, pause_y + 6);
     } else if(ask_overwrite) {
         screen_write("OVERWRITE FILE?", 6, pause_x + 1, pause_y + 4);
 

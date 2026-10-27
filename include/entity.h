@@ -21,7 +21,7 @@
 #include "level.h"
 #include "item.h"
 
-#define ENTITY_TYPES (14)
+#define ENTITY_TYPES (27)
 
 #define ZOMBIE_ENTITY     (0)
 #define SLIME_ENTITY      (1)
@@ -41,12 +41,42 @@
 #define TEXT_PARTICLE_ENTITY      (12)
 #define SMASH_PARTICLE_ENTITY     (13)
 
+// Mod entities
+#define COW_ENTITY         (14)
+#define PIG_ENTITY         (15)
+#define CHICKEN_ENTITY     (16)
+#define SHEEP_ENTITY       (17)
+#define WOLF_ENTITY        (18)
+#define SKELETON_ENTITY    (19)
+#define SPIDER_ENTITY      (20)
+#define BLOATER_ENTITY     (21)
+#define MAGMA_GOLEM_ENTITY (22)
+
+#define ARROW_ENTITY  (23)
+#define XP_ORB_ENTITY (24)
+
+#define BED_ENTITY           (25)
+#define ENCHANT_TABLE_ENTITY (26)
+
+#define FIRST_MOD_MOB (COW_ENTITY)
+#define LAST_MOD_MOB  (MAGMA_GOLEM_ENTITY)
+
 #define ETICK(name)\
     IWRAM_SECTION\
     static void name(struct Level *level, struct entity_Data *data)
 
 #define EDRAW(name)\
     IWRAM_SECTION\
+    static u32 name(struct Level *level, struct entity_Data *data,\
+                    u32 used_sprites)
+
+// Mod entities run from ROM: IWRAM has no room left for them
+#define ETICK_ROM(name)\
+    THUMB\
+    static void name(struct Level *level, struct entity_Data *data)
+
+#define EDRAW_ROM(name)\
+    THUMB\
     static u32 name(struct Level *level, struct entity_Data *data,\
                     u32 used_sprites)
 
@@ -90,6 +120,22 @@ extern const struct Entity spark_entity;
 extern const struct Entity text_particle_entity;
 extern const struct Entity smash_particle_entity;
 
+extern const struct Entity cow_entity;
+extern const struct Entity pig_entity;
+extern const struct Entity chicken_entity;
+extern const struct Entity sheep_entity;
+extern const struct Entity wolf_entity;
+extern const struct Entity skeleton_entity;
+extern const struct Entity spider_entity;
+extern const struct Entity bloater_entity;
+extern const struct Entity magma_golem_entity;
+
+extern const struct Entity arrow_entity;
+extern const struct Entity xp_orb_entity;
+
+extern const struct Entity bed_entity;
+extern const struct Entity enchant_table_entity;
+
 #define ENTITY_S(data)\
     (entity_list[(data)->type])
 
@@ -128,5 +174,39 @@ extern void entity_add_spark(struct Level *level, u16 x, u16 y,
 extern void entity_add_text_particle(struct Level *level, u16 x, u16 y,
                                      u8 number, u8 palette);
 extern void entity_add_smash_particle(struct Level *level, u8 xt, u8 yt);
+
+// mod entity generators
+extern void entity_add_mod_mob(struct Level *level, u8 type, u16 x, u16 y);
+extern void entity_add_arrow(struct Level *level, u16 x, u16 y,
+                             i8 xv, i8 yv, bool from_player);
+extern void entity_add_xp_orb(struct Level *level, u16 x, u16 y);
+
+// shears and bones used on mod mobs: return true if the item was used
+extern bool mod_mob_shear(struct Level *level, struct entity_Data *data);
+extern bool mod_mob_feed_bone(struct Level *level, struct entity_Data *data);
+
+// chooses the mob that 'level_try_spawn' adds
+extern void entity_spawn_random_mob(struct Level *level, u16 x, u16 y,
+                                    u8 level_index, u8 entity_level);
+
+INLINE bool entity_is_mod_mob(u8 type) {
+    return type >= FIRST_MOD_MOB && type <= LAST_MOD_MOB;
+}
+
+// any entity whose data is a 'struct mob_Data'
+INLINE bool entity_is_mob(u8 type) {
+    return type <= PLAYER_ENTITY || entity_is_mod_mob(type);
+}
+
+INLINE bool entity_is_hostile(u8 type) {
+    return type == ZOMBIE_ENTITY   || type == SLIME_ENTITY  ||
+           type == SKELETON_ENTITY || type == SPIDER_ENTITY ||
+           type == BLOATER_ENTITY  || type == MAGMA_GOLEM_ENTITY;
+}
+
+INLINE bool entity_is_furniture(u8 type) {
+    return (type >= WORKBENCH_ENTITY && type <= LANTERN_ENTITY) ||
+           type == BED_ENTITY || type == ENCHANT_TABLE_ENTITY;
+}
 
 #endif // MINICRAFT_ENTITIES

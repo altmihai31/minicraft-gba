@@ -18,6 +18,7 @@
 
 #include "main.h"
 
+#include "level.h"
 #include "inventory.h"
 #include "item.h"
 
@@ -29,12 +30,33 @@ extern u8 player_stamina_recharge_delay;
 
 extern u16 player_invulnerable_time;
 
+#define PLAYER_MAX_HP      (10)
+#define PLAYER_MAX_STAMINA (10)
+
+INLINE bool player_active_item_is_enchanted(void) {
+    return player_active_item.type < ITEM_TYPES &&
+           ITEM_S(&player_active_item)->class == ITEMCLASS_TOOL &&
+           player_active_item.enchanted;
+}
+
 INLINE bool player_pay_stamina(u8 amount) {
+    // enchanted tools cost half the stamina
+    if(player_active_item_is_enchanted())
+        amount /= 2;
+
     if(player_stamina >= amount) {
         player_stamina -= amount;
         return true;
     }
     return false;
 }
+
+// tile in front of the player
+extern void player_facing_tile(struct entity_Data *data, i32 *xt, i32 *yt);
+
+// mod item actions (src/item-use.c)
+extern void item_use(struct Level *level, struct entity_Data *data);
+extern bool item_use_furniture(struct Level *level, struct entity_Data *data,
+                               struct entity_Data *furniture);
 
 #endif // MINICRAFT_PLAYER

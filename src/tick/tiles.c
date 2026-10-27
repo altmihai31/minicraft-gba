@@ -92,7 +92,8 @@ FTICK(wheat_tick) {
     function(level, xt, yt)
 
 static inline void tick_tile(struct Level *level, u32 xt, u32 yt) {
-    switch(LEVEL_GET_TILE(level, xt, yt)) {
+    const u32 tile = LEVEL_GET_TILE(level, xt, yt);
+    switch(tile) {
         case ROCK_TILE:
         case TREE_TILE:
         case SAND_TILE:
@@ -124,6 +125,12 @@ static inline void tick_tile(struct Level *level, u32 xt, u32 yt) {
 
         case WHEAT_TILE:
             CALL(wheat_tick);
+            break;
+
+        // mod tiles are ticked from ROM
+        default:
+            if(tile >= FIRST_MOD_TILE)
+                mod_tile_tick(level, xt, yt);
             break;
     }
 }

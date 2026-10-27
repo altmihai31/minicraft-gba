@@ -18,7 +18,7 @@
 
 #include "main.h"
 
-#define ITEM_TYPES (33)
+#define ITEM_TYPES (73)
 
 #define WOOD_ITEM       (0)
 #define STONE_ITEM      (1)
@@ -59,12 +59,56 @@
 #define SHOVEL_ITEM (31)
 #define HOE_ITEM    (32)
 
+// Mod items: icon = type + 22 (icons 30-54 are the tool tiers)
+#define PLANKS_ITEM         (33)
+#define STONE_BRICKS_ITEM   (34)
+#define BRICK_ITEM          (35)
+#define CLAY_ITEM           (36)
+#define OBSIDIAN_ITEM       (37)
+#define DOOR_ITEM           (38)
+#define TORCH_ITEM          (39)
+#define PUMPKIN_ITEM        (40)
+#define MELON_SLICE_ITEM    (41)
+#define SUGAR_CANE_ITEM     (42)
+#define PAPER_ITEM          (43)
+#define MUSHROOM_ITEM       (44)
+#define ICE_ITEM            (45)
+#define RAW_MEAT_ITEM       (46)
+#define COOKED_MEAT_ITEM    (47)
+#define EGG_ITEM            (48)
+#define STEW_ITEM           (49)
+#define CAKE_ITEM           (50)
+#define LEATHER_ITEM        (51)
+#define WOOL_ITEM           (52)
+#define FEATHER_ITEM        (53)
+#define BONE_ITEM           (54)
+#define STRING_ITEM         (55)
+#define SPORE_POWDER_ITEM   (56)
+#define BUCKET_ITEM         (57)
+#define WATER_BUCKET_ITEM   (58)
+#define LAVA_BUCKET_ITEM    (59)
+#define SHEARS_ITEM         (60)
+#define BOW_ITEM            (61)
+#define ARROW_ITEM          (62)
+#define FISHING_ROD_ITEM    (63)
+#define RAW_FISH_ITEM       (64)
+#define COOKED_FISH_ITEM    (65)
+#define BED_ITEM            (66)
+#define MAP_ITEM            (67)
+#define LEATHER_ARMOR_ITEM  (68)
+#define IRON_ARMOR_ITEM     (69)
+#define GOLD_ARMOR_ITEM     (70)
+#define GEM_ARMOR_ITEM      (71)
+#define ENCHANT_TABLE_ITEM  (72)
+
 #define ITEMCLASS_MATERIAL   (0)
 #define ITEMCLASS_PLACEABLE  (1)
 #define ITEMCLASS_FOOD       (2)
 #define ITEMCLASS_FURNITURE  (3)
 #define ITEMCLASS_POWERGLOVE (4)
 #define ITEMCLASS_TOOL       (5)
+#define ITEMCLASS_UTILITY    (6) // single, non-stackable: bucket, bow...
+#define ITEMCLASS_ARMOR      (7)
 
 struct Item {
     u8 class;
@@ -75,7 +119,7 @@ struct Item {
         // ITEMCLASS_PLACEABLE
         struct {
             u8 placed_tile;
-            u8 placeable_on[2];
+            u8 placeable_on[3];
         };
 
         // ITEMCLASS_FOOD
@@ -95,8 +139,13 @@ struct item_Data {
 
     union {
         u16 count;
-        u8 tool_level;
         u8 chest_id;
+
+        // ITEMCLASS_TOOL
+        struct {
+            u8 tool_level;
+            u8 enchanted;
+        };
     };
 };
 
@@ -108,6 +157,15 @@ extern const struct Item item_list[ITEM_TYPES];
 extern void item_write(struct item_Data *data, u8 palette, u32 x, u32 y);
 extern void item_write_name(struct item_Data *data, u8 palette, u32 x, u32 y);
 extern void item_draw_icon(struct item_Data *data, u32 x, u32 y, bool black_bg);
+
+// Icon index in items.png. HUD tile = 128 + icon, sprite tile = 256 + icon.
+INLINE u16 item_icon(u8 type, u8 tool_level) {
+    if(type >= PLANKS_ITEM)
+        return type + 22;
+
+    const struct Item *item = &item_list[type];
+    return type + (item->class == ITEMCLASS_TOOL) * (2 + tool_level * 5);
+}
 
 INLINE bool item_is_resource(u8 type) {
     const struct Item *item = &item_list[type];

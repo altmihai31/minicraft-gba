@@ -54,7 +54,7 @@ void AgbMain(void) {
     interrupt_toggle(IRQ_VBLANK, true);
     interrupt_isr(IRQ_VBLANK, vblank);
 
-    backup_init(BACKUP_FLASH_64KB);
+    backup_init(BACKUP_FLASH_128KB);
     audio_init(AUDIO_BASIC);
     input_init(30, 2);
     screen_init();

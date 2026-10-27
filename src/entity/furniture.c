@@ -47,7 +47,7 @@ THUMB
 bool entity_add_furniture(struct Level *level, u8 xt, u8 yt,
                           struct item_Data *item_data) {
     u8 entity_id = level_new_entity(
-        level, WORKBENCH_ENTITY + (item_data->type - WORKBENCH_ITEM)
+        level, furniture_item_to_entity(item_data->type)
     );
     if(entity_id >= ENTITY_LIMIT)
         return false;
@@ -85,7 +85,7 @@ EDRAW(furniture_draw) {
         .size = SPRITE_SIZE_16x16,
         .flip = 0,
 
-        .tile = 148 + 4 * (data->type - WORKBENCH_ENTITY),
+        .tile = furniture_sprite(data->type),
         .palette = 6
     });
     return 1;
@@ -125,12 +125,15 @@ GENERATE_STRUCT(anvil_entity,     2);
 GENERATE_STRUCT(chest_entity,     3);
 GENERATE_STRUCT(lantern_entity,   2);
 
+GENERATE_STRUCT(bed_entity,           2);
+GENERATE_STRUCT(enchant_table_entity, 2);
+
 THUMB
 void furniture_take(struct entity_Data *data) {
     struct furniture_Data *furn_data = (struct furniture_Data *) &data->data;
 
     player_active_item = (struct item_Data) {
-        .type = WORKBENCH_ITEM + (data->type - WORKBENCH_ENTITY),
+        .type = furniture_entity_to_item(data->type),
         .chest_id = furn_data->chest_id
     };
     data->should_remove = true;

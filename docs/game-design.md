@@ -48,6 +48,41 @@ sheep: raw meat 1, wool 1 (unsheared) · wolf: tameable with bone · skeleton: b
 spider: string 0–2 · bloater: spore powder 0–2, explodes (destroys nearby non-hard tiles) ·
 magma golem (deepest-level boss): gem 5+, obsidian.
 
+## Implementation notes (26.10.2026)
+Everything above is implemented. Where the spec was open or the code differs:
+- **Break rule:** "Pick, min tier Wood" works like rock: hand/other tools still punch (1–3 dmg). Blocks with a
+  higher min tier (obsidian = gem, spawner = iron) take no damage from anything else, like hard rock.
+- **Ice** drops an ice item (spec: nothing) so the icon has a use: ice can be placed on water as a bridge
+  (not on lava). Standing on ice keeps the player sliding ~16 px after letting go.
+- **Doors:** hand and tools other than axe/pick open/close a door; so do materials, placeables, furniture
+  and the power glove. Food, armor, bow, map etc. keep their own action. A door can't close on a mob.
+- **Placeables:** planks, stone bricks, brick, door, torch on grass/dirt/sand; pumpkin on grass; sugar cane on
+  grass/sand; mushroom on dirt.
+- **Recipe counts** (spec gave none): 1 wood -> 2 planks, 4 stone -> 4 stone bricks, 1 clay + 1 coal -> 1 brick.
+- **Coal** from plain rock dropped from 50 % to 25 % now that coal ore exists.
+- **Hunger:** 10 points, -1 every 40 s. While hunger > 0, +1 HP every 10 s. No starvation damage. Food heals
+  its HP value and fills 2 hunger per HP; it can be eaten at full HP when hungry.
+- **Armor:** equip with A (swaps with the worn piece). HUD shows 2/4/5/7 points for leather/iron/gold/gem.
+- **XP:** orbs from spawners (5–10), hostile mobs (1–2) and the golem (20); 1 XP each.
+- **Enchanting table:** B with a tool in hand, 30 XP: the tool costs half stamina and swords/axes deal +50 %.
+  Enchanted tools are written in yellow. (Flag in the high byte of `item_Data.count`, so it's saved.)
+- **Bed:** B on it heals fully and sets the respawn point (any level) to where the player stands.
+- **Map:** A with the map shows the current level, one pixel per tile, player blinking.
+- **Fishing:** A facing water casts; after 1–5 s, 70 % chance of a raw fish. Switching item cancels it.
+- **Buckets:** water can be poured on hole/dirt/grass/sand (not on the deepest level). Lava only on the
+  deepest level, onto hole/dirt. Filling a bucket leaves a hole (which refills from neighbouring liquid).
+- **Mobs:** passive animals wander and flee when hit; chickens lay eggs (~1 per 40 s), sheep regrow wool
+  (~1 min). Wolves: neutral, angry for 4 s when hit; a bone has a 1/3 chance to tame (always consumed);
+  tamed wolves follow the player and bite hostiles. Skeletons keep distance, shoot every ~2 s within 5 tiles
+  (1 dmg, 2 on the two deepest levels). Spiders chase within 4 tiles at full speed. Bloaters walk up and
+  explode after ~0.75 s near the player (5 + depth dmg, 3x3 soft tiles -> dirt). Golem: 600 HP, spark ring
+  every 2.5 s, generated once on the deepest level, never despawns.
+- **Spawning:** surface spawns are 50 % animals (wolf 1 in 15), 20 % skeleton/spider, 30 % zombie/slime;
+  underground 3/8 skeleton/spider/bloater, the rest zombie/slime; the sky is unchanged. 30 animals at world creation. Hostile stats scale with depth.
+- **Generation:** coal ore clusters (surface rock + first underground), 8 pumpkin + 8 melon patches, sugar cane
+  along surface water, mushrooms on dirt in underground 1–2, 4 frozen ponds, 3 dungeons (7x7 stone-brick room,
+  spawner in the middle) on each of the two deepest levels.
+
 ## Out of scope (needs RAM rework first)
 Nether/End levels, bigger world, many more chests, signs/books with text. Path if ever needed: replace the
 100 KB `level_solid_entities` table with a chunked/linked structure (~85 KB freed).

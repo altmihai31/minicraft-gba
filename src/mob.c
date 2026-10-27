@@ -22,6 +22,7 @@
 #include "air-wizard.h"
 #include "item.h"
 #include "sound.h"
+#include "survival.h"
 
 static inline void mob_die(struct Level *level, struct entity_Data *data) {
     switch(data->type) {
@@ -39,6 +40,10 @@ static inline void mob_die(struct Level *level, struct entity_Data *data) {
 
         case PLAYER_ENTITY:
             mob_player_die(level, data);
+            break;
+
+        default:
+            mob_mod_die(level, data);
             break;
     }
     data->should_remove = true;
@@ -94,8 +99,16 @@ void mob_hurt(struct Level *level, struct entity_Data *data,
     if(mob_data->hurt_time > 0)
         return;
 
-    if(data->type == PLAYER_ENTITY && player_invulnerable_time > 0)
-        return;
+    if(data->type == PLAYER_ENTITY) {
+        if(player_invulnerable_time > 0)
+            return;
+
+        // armor can fully block the hit
+        if(survival_armor_blocks()) {
+            player_invulnerable_time = 30;
+            return;
+        }
+    }
 
     mob_data->hp = (mob_data->hp - damage) * (mob_data->hp >= damage);
 

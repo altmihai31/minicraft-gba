@@ -37,7 +37,23 @@ const struct Entity * const entity_list[ENTITY_TYPES] = {
     &spark_entity,
 
     &text_particle_entity,
-    &smash_particle_entity
+    &smash_particle_entity,
+
+    &cow_entity,
+    &pig_entity,
+    &chicken_entity,
+    &sheep_entity,
+    &wolf_entity,
+    &skeleton_entity,
+    &spider_entity,
+    &bloater_entity,
+    &magma_golem_entity,
+
+    &arrow_entity,
+    &xp_orb_entity,
+
+    &bed_entity,
+    &enchant_table_entity
 };
 
 IWRAM_SECTION
