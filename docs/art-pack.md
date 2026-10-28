@@ -5,13 +5,10 @@ furniture, projectiles and HUD icons. Verified with the project's own build: `ma
 RAM unchanged (EWRAM 97.8 %; the IWRAM figure first quoted here, 93.7 %, came from an older compiler –
 see CLAUDE.md for current numbers), ROM 129 KB -> 142 KB, no VRAM overlaps.
 
-## Install
-1. Copy `res/` over your fork's `res/` (images, palettes and resources.json).
-2. Apply `code-changes.patch` (`git apply code-changes.patch`). It only moves VRAM offsets and loads the new sheet:
-   - loads `mobs_tileset` at OBJ tile 744
-   - player light 320 -> 352, lantern light 336 -> 368 (items now need 256-350)
-   - level light 192 -> 224 in BG charblock 1 (item icons now need 128-222)
-3. Wire features in code (Claude Code): tables below give every tile number and palette row.
+## VRAM layout changes (already in the code)
+- `mobs_tileset` loaded at OBJ tile 744
+- player light 320 -> 352, lantern light 336 -> 368 (items need 256-350)
+- level light 192 -> 224 in BG charblock 1 (item icons need 128-222)
 
 ## Golden rule
 The converter stores each tile relative to the FIRST palette row containing all its colours.
@@ -146,10 +143,10 @@ every frame with the worn armor's colours.
 
 ## Source
 `docs/previews/` is generated from `res/` by `python tools/art-source/make_previews.py` (rerun after art changes).
-`tools/art-source/`: `blocks.py` (blocks), `art_items.py` + `art_mobs.py` (pixel grids),
-`build_art.py` (assembled the original pack by appending to the upstream sheets), `preview_art.py`.
-
-`build_art.py` must not be run again: it would append a second copy. To change mod art now, edit
+`tools/art-source/`: `art_mobs.py`, `art_items.py`, `art_blocks_v2.py` (pixel grids and palette rows),
+`update_art.py` (writes them into `res/`), `make_previews.py`. `blocks.py` keeps the grids of the original
+14 blocks for reference; the art pack was first assembled by a one-off script (removed) that appended it to
+the upstream sheets. To change mod art now, edit
 `art_mobs.py` (mobs, bed, enchanting table, arrows, XP orb) or `art_blocks_v2.py` (revised blocks/icons)
 and run `python tools/art-source/update_art.py [preview.png]`. It overwrites the mod cells in `res/` in
 place, rewrites sprite palette rows 8-11 from `art_mobs.SPRITE_ROWS`, asserts every cell still resolves to

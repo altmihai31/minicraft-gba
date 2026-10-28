@@ -1,9 +1,8 @@
 """Rewrite the mod art in res/ in place from the grids in this folder.
 
-build_art.py made the original art pack by appending to the upstream sheets;
-running it again would append a second copy. This script instead overwrites
-the mod cells where they already are, and checks that every cell still
-resolves to the palette row the game draws it with.
+The art pack was first appended to the upstream sheets by a one-off script.
+This script overwrites the mod cells where they already are, and checks that
+every cell still resolves to the palette row the game draws it with.
 
 usage: python tools/art-source/update_art.py [preview.png]
 """

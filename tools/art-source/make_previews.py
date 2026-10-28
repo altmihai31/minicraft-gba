@@ -1,6 +1,5 @@
 """Write docs/previews/*.png from the installed art in res/.
 
-Replaces preview_art.py (which needed build_art.py's report).
 usage: python tools/art-source/make_previews.py
 """
 import os, sys

@@ -5,6 +5,13 @@ Minecraft-style content to the Game Boy Advance demake of Notch's Minicraft – 
 than the original port. Everything runs on real GBA hardware limits: the world, levels and entity cap are
 unchanged, and new code lives in ROM. All new art is original pixel art.
 
+| | |
+|---|---|
+| ![A stone-brick barn with a door, animals and a planks wall by day](docs/screenshots/day.png) | ![The same barn at night, lit by a torch and the player](docs/screenshots/night.png) |
+| Day: placed walls join like rock, animals wander | Night: torches and the player light the dark |
+| ![An underground room with a skeleton, a spider and a bloater](docs/screenshots/cave.png) | ![The magma golem boss firing sparks on the deepest level](docs/screenshots/golem.png) |
+| Underground: skeletons, spiders and bloaters | The magma golem guards the deepest level |
+
 ## What's new
 
 **Blocks** – coal ore, obsidian, planks, stone bricks, clay bricks, doors, pumpkins, melons, sugar cane,
@@ -39,16 +46,21 @@ Same as the original: **A** attacks / uses the item in hand, **B** opens the inv
 in front of you (crafting stations, chests, bed, enchanting table), **Start** pauses (save game).
 Placing blocks, pouring buckets, casting the rod and equipping armor are all **A** with the item in hand.
 
+## Playing
+Download the ROM from the [Releases](https://github.com/altmihai31/minicraft-gba/releases) page, or the
+latest build from the [Actions](https://github.com/altmihai31/minicraft-gba/actions) tab (needs a GitHub
+login), and open it in a GBA emulator such as mGBA. Saves use 128 KB Flash.
+
 ## Building
 Needs `arm-none-eabi-gcc`, Python 3 with Pillow, and `make`:
 ```sh
-git submodule update --init
+git clone --recursive https://github.com/altmihai31/minicraft-gba
+cd minicraft-gba
 make -C lib/libsimplegba
 make res && make          # -> bin/minicraft-expanded-edition.gba
 ```
-On Windows (Git Bash), see the notes in [`CLAUDE.md`](CLAUDE.md#windows-native-from-git-bash).
-`make DEBUG_KIT=1` builds a debug ROM that starts with every item next to test rooms for each level.
-`make test` plays the ROM in mGBA through its GDB stub and checks the main features automatically.
+Windows steps, the debug ROM (`make DEBUG_KIT=1`) and the automated test (`make test`):
+[`BUILDING.md`](BUILDING.md). Changes: [`CHANGELOG.md`](CHANGELOG.md).
 
 The rest of this file is the original Minicraft for GBA readme.
 

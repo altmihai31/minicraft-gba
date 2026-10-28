@@ -42,12 +42,12 @@ _start:
     @ Reserved (7 Bytes)
         .space  7, 0x00
 
-    @ Software Version
-        .byte   0x04
+    @ Software Version (Expanded Edition: 0 = 1.0)
+        .byte   0x00
 
     @ Header Checksum
     @ -(sum of bytes 0xa0-0xbc) - 0x19: update when the title changes
-        .byte   0xd7
+        .byte   0xdb
 
     @ Reserved (2 Bytes)
         .space  2, 0x00

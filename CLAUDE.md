@@ -38,6 +38,14 @@ in mGBA through the GDB stub (minimized window, no keyboard input) and checks bl
 the enchanting table, night lighting, bed sleep + autosave, split-stack crafting, and an 89 KB save written and
 loaded back. Addresses come from the ELF, so it survives rebuilds. Needs `arm-none-eabi-gdb`; set `MGBA` if mGBA
 isn't in `C:\Program Files\mGBA`. Nothing else may hold GDB port 2345. `--keep` keeps the work folder and logs.
+`tools/test/screenshots.py` uses the same harness with the debug ROM to retake `docs/screenshots/` (it
+composes frames from VRAM/OAM/IO dumps). Human-facing build docs: BUILDING.md.
+
+### CI and releases
+`.github/workflows/build.yml` builds both ROMs with Arm GNU 14.2.Rel1 on every push and checks the headers
+(`tools/check-header.py`). A pushed tag `ee-vX.Y` creates the GitHub release (ROMs + newest CHANGELOG.md
+section). Version: "EE V1.0" in `src/scene/start.c`, Software Version byte in `src/header.s` (0 = 1.0; the
+header checksum must change with it). Checklist: `doc/release-checklist.md`.
 
 ### Debug version
 `make build OS=Linux DEBUG_KIT=1` -> `bin/minicraft-expanded-edition-debug.gba` ("DEBUG BUILD" on the title
@@ -93,11 +101,10 @@ Note: dirt reuses the grass tiles drawn with palette 8; all three ores share cel
   (front, back, side-right, walk A, walk B) – plus arrows, ember orb (XP), bed, enchanting table.
   New sprite palette rows 8–11 keep row 5's hurt-flash layout. Furniture uses sprite row 6.
 - HUD: hunger full/empty, armor full/empty = BG tiles 104–107, palette 10.
-- `code-changes.patch`: loads mobs tileset at 744; player light 320->352, lantern 336->368,
-  level light 192->224 (VRAM room for the extra icons). **Already applied** – do not re-apply. The patch
-  missed `clear_light()` in `src/level.c` (base dark tile 192 -> 224); that is fixed in the tree.
+- VRAM: mobs tileset at OBJ tile 744; player light 352, lantern 368, level light 224 (room for the extra
+  icons). The original art patch is applied and removed from the tree.
 - Edit art: `tools/art-source/` grids, then `python tools/art-source/update_art.py` (in place, checks palette rows;
-  never rerun build_art.py). Style and rules: "Source" section of docs/art-pack.md. Refresh docs/previews with
+  the one-off build_art.py is gone). Style and rules: "Source" section of docs/art-pack.md. Refresh docs/previews with
   `python tools/art-source/make_previews.py`.
 - BG palette 10 indices 5/6 are rewritten every frame (armor pip colour = worn armor tier); index 12 blinks
   stamina. Don't give other palette-10 tiles those colours.

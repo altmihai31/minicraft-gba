@@ -1,5 +1,37 @@
 # Changelog
 
+## [Expanded Edition 1.0] - 28.10.2026
+First release of Minicraft Expanded Edition, a fork of Minicraft for GBA 2.0.
+**(!) Saves use a new 128 KB Flash layout: Minicraft for GBA saves can't be
+loaded. (!)**
+
+### Added
+- 13 blocks: coal ore, obsidian, planks, stone bricks, clay bricks, doors,
+  pumpkins, melons, sugar cane, mushrooms, torches, spawners and ice.
+  Placed planks and bricks join into walls like rock; doors fit into them.
+- 9 mobs: cow, pig, chicken, sheep, wolf (tameable), skeleton, spider,
+  bloater and the magma golem boss on the deepest level.
+- 40 items: buckets, shears, bow and arrows, fishing rod, map, bed,
+  enchanting table, four armor tiers, new food and materials, with
+  workbench, furnace, oven and anvil recipes.
+- Hunger, armor, experience and enchanting (levels I and II).
+- Day and night on the surface: torches, lanterns and the player light
+  the dark, monsters spawn at night. Sleeping in a bed skips the night,
+  sets the respawn point and saves the game.
+- Status messages in the HUD for actions that fail or succeed.
+- Recipe result counts in the crafting menu.
+- Debug build (`make DEBUG_KIT=1`) and an automated smoke test
+  (`make test`).
+
+### Changed
+- Building blocks, doors and torches can be placed on grass, dirt, sand,
+  flowers, farmland and wheat; a flower or crop underneath drops.
+- Saves use 128 KB Flash (two banks), so large worlds fit.
+
+### Fixed
+- Crafting counts a resource split over several inventory slots.
+- A solid block can't be placed on a mob, furniture or a dropped item.
+
 ## [2.0] - 2026-02-19
 ### Changed
 - Rework the save file layout and switch to 64 KB Flash ROM.
