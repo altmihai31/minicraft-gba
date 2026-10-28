@@ -35,6 +35,15 @@ Always draw with the palette row listed here, or colours come out wrong.
 | 33 | 132-135 | 10 | torch |
 | 34 | 136-139 | 7 | spawner |
 | 35 | 140-143 | 6 | ice |
+| 36-40 | 144-163 | 0 | planks, connected (placed) |
+| 41-45 | 164-183 | 2 | stone bricks, connected (placed) |
+| 46-50 | 184-203 | 9 | clay bricks, connected (placed) |
+
+Placed planks, stone bricks and clay bricks join their own kind like rock (square edges): white rim on
+exposed top/left sides, a dark south face, transparent ground outside (shows the level's dirt colour).
+20 tiles per block, `tile = base + quadrant * 5 + state` (quadrants TL, TR, BL, BR; states in
+`art_blocks_v2.py`, picked by `connected_draw` in `src/mod-tiles.c`). Cells 24-26 stay as the plain block
+art. level.png grew to 176x80; the level tileset may use up to 512 tiles (charblock 0).
 
 ## Item icons (res/images/items.png) - items palette
 

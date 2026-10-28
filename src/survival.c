@@ -40,6 +40,11 @@ SBSS_SECTION u8 spawn_yt;
 // not saved: fishing and sliding just stop when loading
 SBSS_SECTION static u8 fishing_timer;
 
+// short message shown for a while in place of the XP counter
+SBSS_SECTION static const char *message;
+SBSS_SECTION static u8 message_palette;
+SBSS_SECTION static u8 message_time;
+
 SBSS_SECTION static i8 slide_xm;
 SBSS_SECTION static i8 slide_ym;
 SBSS_SECTION static u8 slide_time;
@@ -135,7 +140,23 @@ void survival_draw_status_bar(void) {
         BG3_TILEMAP[(10 + i) + 19 * 32] = (106 + (points <= i))        | 10 << 12;
     }
 
-    // numbers are left-aligned: clear the old digits first
-    screen_write("XP      ", 0, 21, 19);
+    // clear columns 20-29 first: numbers are left-aligned and a
+    // message can be longer than the XP counter
+    screen_write("          ", 0, 20, 19);
+
+    if(message_time > 0) {
+        message_time--;
+        screen_write(message, message_palette, 20, 19);
+        return;
+    }
+
+    screen_write("XP", 0, 21, 19);
     SCREEN_WRITE_NUMBER(player_xp, 10, 5, false, 3, 24, 19);
+}
+
+THUMB
+void survival_show_message(const char *text, u8 palette) {
+    message = text;
+    message_palette = palette;
+    message_time = 2 * 60;
 }

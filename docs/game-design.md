@@ -56,8 +56,11 @@ Everything above is implemented. Where the spec was open or the code differs:
   (not on lava). Standing on ice keeps the player sliding ~16 px after letting go.
 - **Doors:** hand and tools other than axe/pick open/close a door; so do materials, placeables, furniture
   and the power glove. Food, armor, bow, map etc. keep their own action. A door can't close on a mob.
-- **Placeables:** planks, stone bricks, brick, door, torch on grass/dirt/sand; pumpkin on grass; sugar cane on
-  grass/sand; mushroom on dirt.
+- **Placeables:** planks, stone bricks, brick and door on grass/dirt/sand/flower/farmland/wheat (the flower or
+  crop is lost); torch on grass/dirt/sand; pumpkin on grass; sugar cane on grass/sand; mushroom on dirt.
+  Placed planks, stone bricks and clay bricks join their own kind like rock (raised look, dark south face).
+- **Enchanting table feedback:** B at the table shows a 2-second message in place of the XP counter:
+  NEED TOOL, ALREADY, NEED 30 XP or ENCHANTED!.
 - **Recipe counts** (spec gave none): 1 wood -> 2 planks, 4 stone -> 4 stone bricks, 1 clay + 1 coal -> 1 brick.
 - **Coal** from plain rock dropped from 50 % to 25 % now that coal ore exists.
 - **Hunger:** 10 points, -1 every 40 s. While hunger > 0, +1 HP every 10 s. No starvation damage. Food heals

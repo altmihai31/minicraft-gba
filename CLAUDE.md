@@ -42,7 +42,7 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
   level 1 a spawner, level 0 a lava pool (water bucket -> obsidian) and the magma golem at the far end.
 
 ## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026, all content implemented)
-- **EWRAM 97.8 % full** (256 468 B used, ~5 670 B free): 5 levels 143 290 B, collision table
+- **EWRAM 97.8 % full** (256 476 B used, ~5 660 B free): 5 levels 143 290 B, collision table
   `level_solid_entities` 100 352 B, 32 chests 12 352 B. Do NOT grow world size, level count, chest count or entity cap.
 - **IWRAM 93.0 %** (30 460 B, 28.10.2026). Data ends at `0x030076FC`, user stack starts at `0x03007F00` (top
   256 B reserved for IRQ stacks) -> **~2 050 B of stack**, no overflow check. Upstream HEAD was 97.9 % / 436 B:
@@ -53,7 +53,7 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
 - `level_tick`/`level_draw` are `IWRAM_SECTION` and `tick/tiles.c` + `draw/tiles.c` are `#include`d into
   level.c as `static inline`, so every tile `case` there lands in IWRAM. Mod tiles go through the `default:`
   branch into `src/mod-tiles.c` (ROM). Largest IWRAM users: `level_draw` 10.8 KB, `game_draw` 1.6 KB.
-- ROM: 171 376 B (upstream 133 456 B).
+- ROM: 173 612 B (upstream 133 456 B).
 - Tile = 1 B type + 1 B data. Data byte holds damage/growth/etc., so a placed block can't remember what was
   under it -> broken placed blocks become dirt (plants -> grass).
 - Entity state: 8 bytes (`data[8]`); mobs get 2 bytes after `struct mob_Data`. Limit 255 entities per level
@@ -73,7 +73,8 @@ Note: dirt reuses the grass tiles drawn with palette 8; all three ores share cel
 
 ## Art already done (installed in res/, see docs/art-pack.md + docs/previews/)
 - 14 blocks in `res/images/level.png` cells 22–35 (coal ore, obsidian, planks, stone bricks, clay bricks,
-  door closed/open, pumpkin, melon, sugar cane, mushrooms, torch, spawner, ice).
+  door closed/open, pumpkin, melon, sugar cane, mushrooms, torch, spawner, ice). Cells 36–50: connected
+  (rock-style) tiles for placed planks, stone bricks and clay bricks, drawn by `connected_draw` in mod-tiles.c.
 - 40 item icons in `res/images/items.png` icons 55–94. Icons 30–54 are tool tiers, so new item types
   (33+) use **icon = type + 22**. HUD tile = 128 + icon, sprite tile = 256 + icon.
 - `res/images/mobs.png` (new tileset, OBJ tile 744 + cell*4): cow, pig, chicken, sheep, sheared sheep, wolf,

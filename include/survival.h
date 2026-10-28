@@ -56,4 +56,8 @@ extern void survival_start_fishing(void);
 
 extern void survival_draw_status_bar(void);
 
+// show 'text' (10 characters at most) for 2 seconds in place of the XP
+// counter
+extern void survival_show_message(const char *text, u8 palette);
+
 #endif // MINICRAFT_SURVIVAL

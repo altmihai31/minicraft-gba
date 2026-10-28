@@ -267,8 +267,13 @@ static inline void player_place(struct Level *level, struct entity_Data *data) {
     if(item->placed_tile == ICE_TILE && level == &levels[0])
         return;
 
+    const bool ground = tile == GRASS_TILE    || tile == DIRT_TILE   ||
+                        tile == SAND_TILE     || tile == FLOWER_TILE ||
+                        tile == FARMLAND_TILE || tile == WHEAT_TILE;
+
     for(u32 i = 0; i < sizeof(item->placeable_on); i++) {
-        if(tile == item->placeable_on[i]) {
+        if(tile == item->placeable_on[i] ||
+           (ground && item->placeable_on[i] == PLACE_ON_GROUND)) {
             LEVEL_SET_TILE(level, xt, yt, item->placed_tile, 0);
 
             player_active_item.count--;

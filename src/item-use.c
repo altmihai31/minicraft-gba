@@ -212,11 +212,17 @@ bool item_use_furniture(struct Level *level, struct entity_Data *data,
         const bool is_tool = player_active_item.type < ITEM_TYPES &&
             ITEM_S(&player_active_item)->class == ITEMCLASS_TOOL;
 
-        if(is_tool && !player_active_item.enchanted &&
-           player_xp >= ENCHANT_COST) {
+        if(!is_tool) {
+            survival_show_message("NEED TOOL", 2);
+        } else if(player_active_item.enchanted) {
+            survival_show_message("ALREADY", 2);
+        } else if(player_xp < ENCHANT_COST) {
+            survival_show_message("NEED 30 XP", 2);
+        } else {
             player_xp -= ENCHANT_COST;
             player_active_item.enchanted = 1;
 
+            survival_show_message("ENCHANTED!", 3);
             SOUND_PLAY(sound_craft);
         }
         return true;

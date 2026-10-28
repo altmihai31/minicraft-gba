@@ -101,6 +101,10 @@
 #define GEM_ARMOR_ITEM      (71)
 #define ENCHANT_TABLE_ITEM  (72)
 
+// placeable_on value for building blocks: grass, dirt, sand, flower,
+// farmland or wheat
+#define PLACE_ON_GROUND (0xfe)
+
 #define ITEMCLASS_MATERIAL   (0)
 #define ITEMCLASS_PLACEABLE  (1)
 #define ITEMCLASS_FOOD       (2)
@@ -119,7 +123,7 @@ struct Item {
         // ITEMCLASS_PLACEABLE
         struct {
             u8 placed_tile;
-            u8 placeable_on[3];
+            u8 placeable_on[3]; // tile IDs or PLACE_ON_GROUND
         };
 
         // ITEMCLASS_FOOD

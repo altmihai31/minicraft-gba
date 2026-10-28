@@ -293,7 +293,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 0,
 
         .placed_tile = PLANKS_TILE,
-        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+        .placeable_on = { PLACE_ON_GROUND, -1, -1 }
     },
 
     // Stone Bricks
@@ -303,7 +303,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 1,
 
         .placed_tile = STONE_BRICKS_TILE,
-        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+        .placeable_on = { PLACE_ON_GROUND, -1, -1 }
     },
 
     // Brick
@@ -313,7 +313,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 0,
 
         .placed_tile = CLAY_BRICKS_TILE,
-        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+        .placeable_on = { PLACE_ON_GROUND, -1, -1 }
     },
 
     // Clay
@@ -337,7 +337,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 0,
 
         .placed_tile = DOOR_CLOSED_TILE,
-        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+        .placeable_on = { PLACE_ON_GROUND, -1, -1 }
     },
 
     // Torch

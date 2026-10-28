@@ -110,7 +110,24 @@ moved = [k for k in before if before[k] != after[k]]
 assert not moved, ('tiles would change palette row', moved)
 bpal.save(f'{RES}/palettes/background.png')
 
+# res2gba stores every 8x8 tile relative to the first row holding its
+# colours; drawing it with another row is fine only if each colour sits at
+# the same index there
+def tile_draws_right(img, box, row, rows, pal_px):
+    cols = set(img.crop(box).getdata()) - {MAG}
+    first = next((i for i, rs in enumerate(rows) if cols <= rs), None)
+    if first is None:
+        return False
+    idx = {pal_px[x, first]: x for x in range(15, -1, -1)}
+    return all(pal_px[idx[c], row] == c for c in cols)
+
 level = Image.open(f'{RES}/images/level.png').convert('RGB')
+height = (max(BLOCKS) // 11 + 1) * 16
+if level.size[1] < height:
+    grown = Image.new('RGB', (level.size[0], height), MAG)
+    grown.paste(level, (0, 0))
+    level = grown
+bp = bpal.load()
 for cell, (name, grid, row) in BLOCKS.items():
     x0, y0 = (cell % 11) * 16, (cell // 11) * 16
     px = level.load()
@@ -119,6 +136,10 @@ for cell, (name, grid, row) in BLOCKS.items():
             px[x0 + x, y0 + y] = hx(grid[y][x])
     r = resolve(level, (x0, y0, x0 + 16, y0 + 16), brows)
     assert r == row, (cell, name, r)
+    for q in range(4):
+        tx, ty = x0 + (q % 2) * 8, y0 + (q // 2) * 8
+        assert tile_draws_right(level, (tx, ty, tx + 8, ty + 8), row, brows, bp), \
+            (cell, name, q)
 level.save(f'{RES}/images/level.png')
 
 # ------------------------------------------------------------ items.png

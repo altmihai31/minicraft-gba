@@ -40,15 +40,53 @@ static const u8 mod_tile_palettes[TILE_TYPES - FIRST_MOD_TILE] = {
     6   // ice
 };
 
+// Planks, stone bricks and clay bricks join their own kind like rock:
+// 20 tiles each from tile 144, tile = base + quadrant * 5 + state
+// (see tools/art-source/art_blocks_v2.py)
+#define CONNECTED_TILES_START (144)
+static_assert(STONE_BRICKS_TILE == PLANKS_TILE + 1 &&
+              CLAY_BRICKS_TILE  == PLANKS_TILE + 2, "connected blocks order");
+
+// v/h: same block above or below / left or right of the quadrant,
+// diag: same block on the quadrant's corner
+static inline u32 connected_state(bool v, bool h, bool diag) {
+    if(v && h)
+        return 3 + !diag;
+    return v + h * 2;
+}
+
+static inline void connected_draw(struct Level *level, i32 xt, i32 yt,
+                                  u32 tile, u16 base, u16 tiles[4]) {
+    #define SAME(x, y) (LEVEL_GET_TILE(level, (x), (y)) == tile)
+    const bool u = SAME(xt,     yt - 1);
+    const bool d = SAME(xt,     yt + 1);
+    const bool l = SAME(xt - 1, yt    );
+    const bool r = SAME(xt + 1, yt    );
+
+    tiles[0] = base +  0 + connected_state(u, l, SAME(xt - 1, yt - 1));
+    tiles[1] = base +  5 + connected_state(u, r, SAME(xt + 1, yt - 1));
+    tiles[2] = base + 10 + connected_state(d, l, SAME(xt - 1, yt + 1));
+    tiles[3] = base + 15 + connected_state(d, r, SAME(xt + 1, yt + 1));
+    #undef SAME
+}
+
 THUMB
 void mod_tile_draw(struct Level *level, u32 xt, u32 yt, u16 tiles[4]) {
     const u32 tile = LEVEL_GET_TILE(level, xt, yt);
     if(tile < FIRST_MOD_TILE || tile >= TILE_TYPES)
         return;
 
-    // every mod tile is a full 16x16 cell: cell = tile ID
-    const u16 base = (tile * 4) |
-                     mod_tile_palettes[tile - FIRST_MOD_TILE] << 12;
+    const u16 palette = mod_tile_palettes[tile - FIRST_MOD_TILE] << 12;
+
+    if(tile >= PLANKS_TILE && tile <= CLAY_BRICKS_TILE) {
+        const u16 base = (CONNECTED_TILES_START +
+                          (tile - PLANKS_TILE) * 20) | palette;
+        connected_draw(level, xt, yt, tile, base, tiles);
+        return;
+    }
+
+    // every other mod tile is a full 16x16 cell: cell = tile ID
+    const u16 base = (tile * 4) | palette;
     tiles[0] = base;
     tiles[1] = base + 1;
     tiles[2] = base + 2;
