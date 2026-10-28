@@ -140,8 +140,10 @@ def build_scene():
             edge = dx in (0, 4) or dy in (1, 4)
             house.append(T(dx, dy, 25 if edge else 0))
     house += [T(2, 1, 27), T(2, 2, 33)]  # door, torch inside
-    house += [T(dx, -3, 24) for dx in range(-4, 0)]   # planks wall
-    house += [T(4, -3, 26), T(4, -2, 26)]             # clay pillar
+    # away from the animals the debug kit puts at y -3 and +3 (x -1..3),
+    # so none wanders against a wall before the shot
+    house += [T(dx, -3, 24) for dx in range(-8, -4)]  # planks wall
+    house += [T(5, -1, 26), T(5, 0, 26)]              # clay pillar
     house += [f'set *(unsigned short *) ($pl + 2) = (($px - 1) << 4) + 8',
               f'set *(unsigned short *) ($pl + 4) = (($py + 1) << 4) + 8']
     s.at(5, *house)
