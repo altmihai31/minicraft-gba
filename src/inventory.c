@@ -61,17 +61,20 @@ void inventory_remove(struct Inventory *inventory,
 
 void inventory_remove_resource(struct Inventory *inventory,
                                u8 item_type, u16 count) {
-    for(u32 i = 0; i < inventory->size; i++) {
+    // take from every slot holding the resource, until 'count' is reached
+    for(u32 i = 0; i < inventory->size && count > 0; i++) {
         struct item_Data *data = &inventory->items[i];
+        if(data->type != item_type)
+            continue;
 
-        if(data->type == item_type && data->count >= count) {
-            data->count -= count;
-            if(data->count == 0) {
-                struct item_Data removed;
-                inventory_remove(inventory, &removed, i);
-            }
+        const u16 taken = (data->count < count) ? data->count : count;
+        data->count -= taken;
+        count -= taken;
 
-            break;
+        if(data->count == 0) {
+            struct item_Data removed;
+            inventory_remove(inventory, &removed, i);
+            i--; // the next item moved into this slot
         }
     }
 }

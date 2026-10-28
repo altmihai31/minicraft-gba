@@ -304,6 +304,11 @@ FINTERACT(ore_interact) {
             LEVEL_SET_TILE(level, xt, yt, DIRT_TILE, 0);
 
             count += 2;
+
+            // XP: coal and iron 1, gold 2, gem 3
+            const u32 xp = 1 + (tile == GOLD_ORE_TILE) + 2 * (tile == GEM_ORE_TILE);
+            for(u32 i = 0; i < xp; i++)
+                entity_add_xp_orb(level, (xt << 4) + 8, (yt << 4) + 8);
         } else {
             LEVEL_SET_DATA(level, xt, yt, damage);
         }

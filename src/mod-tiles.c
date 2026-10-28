@@ -55,9 +55,15 @@ static inline u32 connected_state(bool v, bool h, bool diag) {
     return v + h * 2;
 }
 
+static inline bool wall_joins(u32 neighbour, u32 tile) {
+    return neighbour == tile ||
+           neighbour == DOOR_CLOSED_TILE || neighbour == DOOR_OPEN_TILE;
+}
+
 static inline void connected_draw(struct Level *level, i32 xt, i32 yt,
                                   u32 tile, u16 base, u16 tiles[4]) {
-    #define SAME(x, y) (LEVEL_GET_TILE(level, (x), (y)) == tile)
+    // a door in the wall counts as wall: no rim or face towards it
+    #define SAME(x, y) wall_joins(LEVEL_GET_TILE(level, (x), (y)), tile)
     const bool u = SAME(xt,     yt - 1);
     const bool d = SAME(xt,     yt + 1);
     const bool l = SAME(xt - 1, yt    );

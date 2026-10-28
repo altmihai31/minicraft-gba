@@ -28,6 +28,13 @@ extern void debug_kit_give_items(void);
 // carve the test rooms and stairs around the player's spawn point
 extern void debug_kit_build_world(void);
 
+// Stack high-water mark: debug_kit_stack_init fills the free stack with a
+// pattern at boot; debug_kit_stack_free returns how many bytes between the
+// end of IWRAM data and the deepest stack use were never touched. Shown in
+// the performance overlay (hold L+R, press Select) as "S" + hex bytes.
+extern void debug_kit_stack_init(void);
+extern u32 debug_kit_stack_free(void);
+
 #endif // DEBUG_KIT
 
 #endif // MINICRAFT_DEBUG_KIT

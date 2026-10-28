@@ -15,6 +15,8 @@
  */
 #include "screen.h"
 
+#include "survival.h"
+
 #include "res/palettes/background.c"
 #include "res/palettes/sprites.c"
 #include "res/palettes/items.c"
@@ -264,7 +266,7 @@ void screen_load_active_item_palette(u8 palette) {
 
 void screen_update_level_specific(void) {
     background_toggle(BG0, current_level == 4); // sky background
-    background_toggle(BG2, current_level < 3);  // light layer
+    survival_update_light();                    // light layer
 
     // dirt color
     const u16 dirt_colors[5][2] = {

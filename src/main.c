@@ -18,6 +18,7 @@
 #include "screen.h"
 #include "scene.h"
 #include "performance.h"
+#include "debug-kit.h"
 
 u32 tick_count = 0;
 u32 expected_tickcount = 0;
@@ -50,6 +51,10 @@ static void vblank(void) {
 }
 
 void AgbMain(void) {
+#ifdef DEBUG_KIT
+    debug_kit_stack_init();
+#endif
+
     // enable VBlank interrupt
     interrupt_toggle(IRQ_VBLANK, true);
     interrupt_isr(IRQ_VBLANK, vblank);

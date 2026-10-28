@@ -19,6 +19,7 @@
 #include "tile.h"
 #include "entity.h"
 #include "player.h"
+#include "survival.h"
 
 #include "tick/tiles.c"
 
@@ -272,7 +273,7 @@ static inline void draw_entities(struct Level *level) {
         i32 yr = data->y - level_y_offset;
 
         // draw lantern light
-        if(level < &levels[3] && data->type == LANTERN_ENTITY)
+        if(light_layer_on && data->type == LANTERN_ENTITY)
             draw_lantern_light(data);
 
         if(xr < -16 || xr >= DISPLAY_WIDTH + 16 ||
@@ -299,7 +300,7 @@ static inline void draw_entities(struct Level *level) {
     }
 
     // draw player light
-    if(level < &levels[3])
+    if(light_layer_on)
         draw_player_light(level, &used_sprites);
 
     // hide remaining sprites
@@ -362,13 +363,13 @@ IWRAM_SECTION
 void level_draw(struct Level *level) {
     update_offset(level);
 
-    if(level < &levels[3])
+    if(light_layer_on)
         clear_light();
 
     draw_tiles(level);
     draw_entities(level);
 
-    if(level < &levels[3])
+    if(light_layer_on)
         mod_tile_draw_torch_light(level);
 
     if(level == &levels[0])

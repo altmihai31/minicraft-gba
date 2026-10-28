@@ -160,4 +160,31 @@ void debug_kit_build_world(void) {
     }
 }
 
+#define STACK_PATTERN (0x57acc0de)
+
+// end of IWRAM data (linker script)
+extern u8 __bss_start[], __bss_size[];
+
+static inline u32 *stack_bottom(void) {
+    return (u32 *) ((u32) __bss_start + (u32) __bss_size);
+}
+
+THUMB
+void debug_kit_stack_init(void) {
+    u32 sp;
+    asm volatile("mov %0, sp" : "=r" (sp));
+
+    // leave a margin below the current stack pointer
+    for(u32 *p = stack_bottom(); (u32) p < sp - 64; p++)
+        *p = STACK_PATTERN;
+}
+
+THUMB
+u32 debug_kit_stack_free(void) {
+    u32 *p = stack_bottom();
+    while(*p == STACK_PATTERN)
+        p++;
+    return (u32) p - (u32) stack_bottom();
+}
+
 #endif // DEBUG_KIT

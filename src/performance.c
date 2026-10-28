@@ -18,6 +18,7 @@
 #include "level.h"
 #include "entity.h"
 #include "screen.h"
+#include "debug-kit.h"
 
 #define OAM ((vu16 *) 0x07000000)
 
@@ -65,6 +66,12 @@ void performance_draw(void) {
 
     SCREEN_WRITE_NUMBER(entity_count, 16, 2, true, 0, 28, 0);
     SCREEN_WRITE_NUMBER(sprite_count, 16, 2, true, 0, 28, 1);
+
+#ifdef DEBUG_KIT
+    // stack bytes never used since boot
+    screen_write("S", 0, 0, 6);
+    SCREEN_WRITE_NUMBER(debug_kit_stack_free(), 16, 3, true, 0, 1, 6);
+#endif
 }
 
 IWRAM_SECTION

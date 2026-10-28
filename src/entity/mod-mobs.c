@@ -19,6 +19,7 @@
 #include "tile.h"
 #include "item.h"
 #include "sound.h"
+#include "survival.h"
 
 // All mod mobs share one tick, draw and touch function, driven by the
 // 'mod_mobs' table. They run from ROM.
@@ -592,7 +593,16 @@ void entity_spawn_random_mob(struct Level *level, u16 x, u16 y,
                              u8 level_index, u8 entity_level) {
     u8 type = -1;
 
-    if(level_index == 3) {
+    if(level_index == 3 && survival_is_night()) {
+        // surface at night: monsters only
+        switch(random(4)) {
+            case 0: type = SKELETON_ENTITY; break;
+            case 1: type = SPIDER_ENTITY;   break;
+            default:
+                entity_add_zombie(level, x, y, entity_level);
+                return;
+        }
+    } else if(level_index == 3) {
         // surface: animals, and a few new monsters
         switch(random(10)) {
             case 0: type = COW_ENTITY;     break;

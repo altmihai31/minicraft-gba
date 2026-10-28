@@ -32,20 +32,29 @@ make build OS=Linux                                                # Makefile's 
 - mGBA locks the ROM it has open: close it before building, or `objcopy` can't write `bin/minicraft-expanded-edition.gba`
   (the link still succeeds, so the old ROM silently stays). mGBA keys: X = A, Z = B, Enter = Start.
 
+### Smoke test
+`make test` (Windows: `make test OS=Linux PYTHON=py`) runs `tools/test/smoke.py`: it plays the built normal ROM
+in mGBA through the GDB stub (minimized window, no keyboard input) and checks block placement and its messages,
+the enchanting table, night lighting, bed sleep + autosave, split-stack crafting, and an 89 KB save written and
+loaded back. Addresses come from the ELF, so it survives rebuilds. Needs `arm-none-eabi-gdb`; set `MGBA` if mGBA
+isn't in `C:\Program Files\mGBA`. Nothing else may hold GDB port 2345. `--keep` keeps the work folder and logs.
+
 ### Debug version
 `make build OS=Linux DEBUG_KIT=1` -> `bin/minicraft-expanded-edition-debug.gba` ("DEBUG BUILD" on the title
 screen). It uses its own object dir (`obj-debug/`) and save file, so it never mixes with the normal build,
 which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_KIT`:
+- Performance overlay (L+R, Select) also shows "S" + hex: stack bytes never used since boot.
 - New game starts with gem tools, 99 of every mod item, furnace/oven/anvil/lantern, crafting materials, 300 XP.
 - Next to the spawn: a pond (fishing, buckets), sheep, a wolf and other animals, and stairs down. The stairs
   chain straight down (3 tiles apart) through lit test rooms: level 2 has a skeleton, spider and bloater,
   level 1 a spawner, level 0 a lava pool (water bucket -> obsidian) and the magma golem at the far end.
 
 ## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026, all content implemented)
-- **EWRAM 97.8 % full** (256 476 B used, ~5 660 B free): 5 levels 143 290 B, collision table
+- **EWRAM 97.8 % full** (256 480 B used, ~5 660 B free): 5 levels 143 290 B, collision table
   `level_solid_entities` 100 352 B, 32 chests 12 352 B. Do NOT grow world size, level count, chest count or entity cap.
-- **IWRAM 93.0 %** (30 460 B, 28.10.2026). Data ends at `0x030076FC`, user stack starts at `0x03007F00` (top
-  256 B reserved for IRQ stacks) -> **~2 050 B of stack**, no overflow check. Upstream HEAD was 97.9 % / 436 B:
+- **IWRAM 92.8 %** (30 420 B, 28.10.2026). Data ends at `0x030076D4`, user stack starts at `0x03007F00` (top
+  256 B reserved for IRQ stacks) -> **~2 090 B of stack**, no overflow check (the debug build shows the
+  stack high-water mark). Upstream HEAD was 97.9 % / 436 B:
   the fork freed IWRAM by moving `player_attack`/`player_use` to ROM and shrinking `struct Tile` to 8 B
   (`interact` pointers now live in the ROM table `tile_interact_list`).
 - Any plain global/static goes to IWRAM `.bss`: put new ones in EWRAM with `SBSS_SECTION`.
@@ -53,16 +62,18 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
 - `level_tick`/`level_draw` are `IWRAM_SECTION` and `tick/tiles.c` + `draw/tiles.c` are `#include`d into
   level.c as `static inline`, so every tile `case` there lands in IWRAM. Mod tiles go through the `default:`
   branch into `src/mod-tiles.c` (ROM). Largest IWRAM users: `level_draw` 10.8 KB, `game_draw` 1.6 KB.
-- ROM: 173 612 B (upstream 133 456 B).
+- ROM: 175 512 B (upstream 133 456 B).
 - Tile = 1 B type + 1 B data. Data byte holds damage/growth/etc., so a placed block can't remember what was
   under it -> broken placed blocks become dirt (plants -> grass).
 - Entity state: 8 bytes (`data[8]`); mobs get 2 bytes after `struct mob_Data`. Limit 255 entities per level
   shared by mobs, items, particles. Item types go up to 72: bitfields holding one need 7 bits.
-- **Saves:** 128 KB Flash (`BACKUP_FLASH_128KB`), save version byte at 0x1C (`SAVE_VERSION` in storage.c –
-  bump it whenever the layout changes; other versions show as no save). The backup driver takes 16-bit
+- **Saves:** 128 KB Flash (`BACKUP_FLASH_128KB`), save version byte at 0x1C (`SAVE_VERSION` in storage.c, now 2
+  – bump it whenever the layout changes; other versions show as no save). The backup driver takes 16-bit
   offsets, so storage.c switches the two 64 KB banks itself (`flash_read_at`/`flash_write_at`). The game
   code is written last; a save that doesn't fit is left invalid and the pause menu says "SAVE FAILED".
-  A fresh world uses ~20 KB.
+  A fresh world uses ~20 KB. mGBA starts every save as 64 KB Flash and switches to 128 KB on the first bank-1
+  access (loading a save, or saving past 64 KB), so a 64 KB `.sav` file is normal. Tested 28.10.2026: an
+  89 KB save writes, verifies and loads back byte-exact; a 20 KB save loads from a 64 KB file.
 - Liquid tile is water everywhere except the deepest level (index 0), where it is lava.
 - `options.keep_inventory` defaults to true: death keeps inventory, armor and XP.
 
@@ -86,7 +97,10 @@ Note: dirt reuses the grass tiles drawn with palette 8; all three ores share cel
   level light 192->224 (VRAM room for the extra icons). **Already applied** – do not re-apply. The patch
   missed `clear_light()` in `src/level.c` (base dark tile 192 -> 224); that is fixed in the tree.
 - Edit art: `tools/art-source/` grids, then `python tools/art-source/update_art.py` (in place, checks palette rows;
-  never rerun build_art.py). Style and rules: "Source" section of docs/art-pack.md.
+  never rerun build_art.py). Style and rules: "Source" section of docs/art-pack.md. Refresh docs/previews with
+  `python tools/art-source/make_previews.py`.
+- BG palette 10 indices 5/6 are rewritten every frame (armor pip colour = worn armor tier); index 12 blinks
+  stamina. Don't give other palette-10 tiles those colours.
 
 ## Design spec
 See `docs/game-design.md` for break rules, drops, item behaviour, food, armor and recipes. Everything in it is
@@ -98,7 +112,9 @@ implemented; its "Implementation notes" section lists where the code differs fro
 - `src/entity/mod-mobs.c`: all 9 mobs – one `mod_mobs` table, shared tick/draw/touch, drops, spawn choice.
 - `src/entity/projectiles.c`: arrows and XP orbs. Bed/enchanting table: `src/entity/furniture.c`.
 - `src/item-use.c`: bucket, shears, bow, fishing rod, map, armor, bone, bed, enchanting table.
-- `src/survival.c`: hunger, armor, XP, bed spawn point, ice sliding, fishing, HUD.
+- `src/survival.c`: hunger, armor, XP, bed spawn point, ice sliding, fishing, HUD, status-bar messages
+  (`survival_show_message`), day/night (`day_time`, saved; at night the surface uses the light layer BG2,
+  alpha-blended, so player/lantern/torch light works; `light_layer_on` replaces the old `level < &levels[3]`).
 - `src/scene/map.c`: map item. World generation of mod content: end of `src/generator.c`.
 
 ## Owner preferences

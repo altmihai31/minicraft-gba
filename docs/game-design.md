@@ -48,7 +48,7 @@ sheep: raw meat 1, wool 1 (unsheared) · wolf: tameable with bone · skeleton: b
 spider: string 0–2 · bloater: spore powder 0–2, explodes (destroys nearby non-hard tiles) ·
 magma golem (deepest-level boss): gem 5+, obsidian.
 
-## Implementation notes (26.10.2026)
+## Implementation notes (26.10.2026, updated 28.10.2026)
 Everything above is implemented. Where the spec was open or the code differs:
 - **Break rule:** "Pick, min tier Wood" works like rock: hand/other tools still punch (1–3 dmg). Blocks with a
   higher min tier (obsidian = gem, spawner = iron) take no damage from anything else, like hard rock.
@@ -56,20 +56,32 @@ Everything above is implemented. Where the spec was open or the code differs:
   (not on lava). Standing on ice keeps the player sliding ~16 px after letting go.
 - **Doors:** hand and tools other than axe/pick open/close a door; so do materials, placeables, furniture
   and the power glove. Food, armor, bow, map etc. keep their own action. A door can't close on a mob.
-- **Placeables:** planks, stone bricks, brick and door on grass/dirt/sand/flower/farmland/wheat (the flower or
-  crop is lost); torch on grass/dirt/sand; pumpkin on grass; sugar cane on grass/sand; mushroom on dirt.
-  Placed planks, stone bricks and clay bricks join their own kind like rock (raised look, dark south face).
-- **Enchanting table feedback:** B at the table shows a 2-second message in place of the XP counter:
-  NEED TOOL, ALREADY, NEED 30 XP or ENCHANTED!.
+- **Placeables:** planks, stone bricks, brick, door and torch on grass/dirt/sand/flower/farmland/wheat (a flower
+  or crop underneath drops as if harvested); pumpkin on grass; sugar cane on grass/sand; mushroom on dirt.
+  Placed planks, stone bricks and clay bricks join their own kind like rock (raised look, dark south face);
+  doors count as part of the wall. A solid block can't be placed on a mob, furniture or a dropped item
+  (BLOCKED); the wrong ground says CANT PLACE.
+- **Status messages** (2 s, in place of the XP counter): placement, enchanting table, SAVED / NOT SAVED (bed),
+  FULL / CANT POUR (buckets), FISHING... / FISH! / GOT AWAY.
+- **Furniture reach:** B reaches the centre of the tile in front, so furniture right next to the player works.
+- **Crafting:** a resource split over two inventory slots counts in full (upstream only checked the first
+  slot) and is taken from both. Recipes making several items show the count ("PLANKS X2").
 - **Recipe counts** (spec gave none): 1 wood -> 2 planks, 4 stone -> 4 stone bricks, 1 clay + 1 coal -> 1 brick.
 - **Coal** from plain rock dropped from 50 % to 25 % now that coal ore exists.
 - **Hunger:** 10 points, -1 every 40 s. While hunger > 0, +1 HP every 10 s. No starvation damage. Food heals
   its HP value and fills 2 hunger per HP; it can be eaten at full HP when hungry.
-- **Armor:** equip with A (swaps with the worn piece). HUD shows 2/4/5/7 points for leather/iron/gold/gem.
-- **XP:** orbs from spawners (5–10), hostile mobs (1–2) and the golem (20); 1 XP each.
-- **Enchanting table:** B with a tool in hand, 30 XP: the tool costs half stamina and swords/axes deal +50 %.
-  Enchanted tools are written in yellow. (Flag in the high byte of `item_Data.count`, so it's saved.)
-- **Bed:** B on it heals fully and sets the respawn point (any level) to where the player stands.
+- **Armor:** equip with A (swaps with the worn piece). HUD shows 2/4/5/7 points for leather/iron/gold/gem, the
+  pips coloured like the worn armor (brown, grey, yellow, pink).
+- **XP:** orbs from spawners (5–10), hostile mobs (1–2), the golem (20) and mined ore (coal/iron 1, gold 2,
+  gem 3); 1 XP each.
+- **Enchanting table:** B with a tool in hand. Level I costs 30 XP: half stamina, swords/axes +50 %. Level II
+  costs 60 more: a quarter of the stamina, +100 %. Enchanted tools are written in yellow with '+' (I) or '*'
+  (II) between tier and name. (Level in the high byte of `item_Data.count`, so it's saved.)
+- **Bed:** B on it heals fully, sets the respawn point (any level) to where the player stands, skips to the
+  morning if it is dusk or night, and saves the game.
+- **Day and night:** 12-minute cycle (day 8 min, dusk 30 s, night 3 min, dawn 30 s), saved. Only the surface
+  gets dark: the light layer is blended over the level at up to 10/16, so the player, lanterns and torches
+  light it. Surface spawns at night are monsters only (skeleton, spider, zombie).
 - **Map:** A with the map shows the current level, one pixel per tile, player blinking.
 - **Fishing:** A facing water casts; after 1–5 s, 70 % chance of a raw fish. Switching item cancels it.
 - **Buckets:** water can be poured on hole/dirt/grass/sand (not on the deepest level). Lava only on the

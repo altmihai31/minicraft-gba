@@ -60,4 +60,24 @@ extern void survival_draw_status_bar(void);
 // counter
 extern void survival_show_message(const char *text, u8 palette);
 
+// Day and night: 'day_time' counts ticks through a 12-minute cycle (saved).
+// At night the surface is darkened with the light layer, which lights,
+// lanterns and torches cut through.
+#define DAY_CYCLE (12 * 60 * 60)
+
+extern u16 day_time;
+
+// true while the light layer (BG2) is drawn: underground, or on the
+// surface between dusk and dawn
+extern bool light_layer_on;
+
+extern bool survival_is_night(void);
+
+// sleeping in a bed: skip to the morning if it is getting dark
+extern void survival_sleep(void);
+
+// update the light layer and the night blending; called every tick
+// and when the level changes
+extern void survival_update_light(void);
+
 #endif // MINICRAFT_SURVIVAL

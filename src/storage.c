@@ -83,15 +83,16 @@
       1 B - spawn y
       2 B - experience
       2 B - hunger timer
+      2 B - time of day
 
-     22 B - padding
+     20 B - padding
 */
 
 #define STORAGE_SIZE (128 * 1024)
 
 // Increase when the layout changes: saves with a different version are
 // treated as missing.
-#define SAVE_VERSION (1)
+#define SAVE_VERSION (2)
 #define SAVE_VERSION_OFFSET (0x001c)
 
 #define HEADER_SIZE 64
@@ -269,6 +270,9 @@ static INLINE u32 load_header(u32 offset) {
     offset += 2;
 
     flash_read_at(offset, &player_hunger_timer, 2);
+    offset += 2;
+
+    flash_read_at(offset, &day_time, 2);
     offset += 2;
 
     return HEADER_SIZE;
@@ -480,6 +484,9 @@ static INLINE u32 store_header(u32 offset) {
     offset += 2;
 
     write_16(offset, player_hunger_timer);
+    offset += 2;
+
+    write_16(offset, day_time);
     offset += 2;
 
     return padding(offset, HEADER_SIZE);

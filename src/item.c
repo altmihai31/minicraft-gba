@@ -347,7 +347,7 @@ const struct Item item_list[ITEM_TYPES] = {
         .palette = 0,
 
         .placed_tile = TORCH_TILE,
-        .placeable_on = { GRASS_TILE, DIRT_TILE, SAND_TILE }
+        .placeable_on = { PLACE_ON_GROUND, -1, -1 }
     },
 
     // Pumpkin
@@ -635,11 +635,15 @@ void item_write_name(struct item_Data *data, u8 palette, u32 x, u32 y) {
     if(item->class == ITEMCLASS_TOOL) {
         const u8 level = data->tool_level;
 
-        // enchanted tools are written in the title color
+        // enchanted tools are written in the title color, with '+'
+        // (level 1) or '*' (level 2) between tier and name
         if(data->enchanted)
             palette = 10;
 
         screen_write(level_names[level], palette, x, y);
+        if(data->enchanted)
+            screen_write(data->enchanted == 1 ? "+" : "*",
+                         palette, x + 3 + (level != 4), y);
         screen_write(item->name, palette, x + 4 + (level != 4), y);
     } else {
         screen_write(item->name, palette, x, y);

@@ -161,9 +161,10 @@ static inline void player_hurt_entities(struct Level *level, struct entity_Data 
                         damage += 1;
                     }
 
-                    // enchanted weapons hit 50% harder
-                    if(player_active_item_is_enchanted())
-                        damage += damage / 2;
+                    // enchanted weapons hit 50% (level 1) or
+                    // 100% (level 2) harder
+                    damage += damage / 2 *
+                              player_active_item_enchant_level();
 
                     mob_hurt(level, e_data, damage, dir);
                 }
@@ -250,6 +251,31 @@ static inline void player_eat(struct Level *level, struct entity_Data *data) {
     }
 }
 
+// true if a mob, furniture or a dropped item overlaps the tile. The player
+// is skipped: like upstream, it may stand on the edge of the tile in front.
+static inline bool player_tile_occupied(struct Level *level, i32 xt, i32 yt) {
+    const i32 x0 = xt << 4;
+    const i32 y0 = yt << 4;
+
+    for(u32 i = 1; i < ENTITY_LIMIT; i++) {
+        struct entity_Data *e_data = &level->entities[i];
+        if(e_data->type >= ENTITY_TYPES)
+            continue;
+
+        // particles and projectiles don't mind
+        if(e_data->type == SPARK_ENTITY          ||
+           e_data->type == TEXT_PARTICLE_ENTITY  ||
+           e_data->type == SMASH_PARTICLE_ENTITY ||
+           e_data->type == ARROW_ENTITY          ||
+           e_data->type == XP_ORB_ENTITY)
+            continue;
+
+        if(entity_intersects(e_data, x0, y0, x0 + 15, y0 + 15))
+            return true;
+    }
+    return false;
+}
+
 static inline void player_place(struct Level *level, struct entity_Data *data) {
     struct mob_Data *mob_data = (struct mob_Data *) &data->data;
     const struct Item *item = ITEM_S(&player_active_item);
@@ -271,18 +297,37 @@ static inline void player_place(struct Level *level, struct entity_Data *data) {
                         tile == SAND_TILE     || tile == FLOWER_TILE ||
                         tile == FARMLAND_TILE || tile == WHEAT_TILE;
 
+    bool placeable = false;
     for(u32 i = 0; i < sizeof(item->placeable_on); i++) {
         if(tile == item->placeable_on[i] ||
            (ground && item->placeable_on[i] == PLACE_ON_GROUND)) {
-            LEVEL_SET_TILE(level, xt, yt, item->placed_tile, 0);
-
-            player_active_item.count--;
-            if(player_active_item.count == 0)
-                player_active_item.type = -1;
-
+            placeable = true;
             break;
         }
     }
+    if(!placeable) {
+        survival_show_message("CANT PLACE", 2);
+        return;
+    }
+
+    // a solid block must not trap a mob, furniture or a dropped item
+    if(tile_list[item->placed_tile].is_solid &&
+       player_tile_occupied(level, xt, yt)) {
+        survival_show_message("BLOCKED", 2);
+        return;
+    }
+
+    // a flower or crop under a building block drops as if harvested
+    if(tile == FLOWER_TILE || tile == WHEAT_TILE) {
+        struct item_Data hand = { .type = -1 };
+        tile_interact_list[tile](level, xt, yt, &hand);
+    }
+
+    LEVEL_SET_TILE(level, xt, yt, item->placed_tile, 0);
+
+    player_active_item.count--;
+    if(player_active_item.count == 0)
+        player_active_item.type = -1;
 }
 
 static inline void player_place_furniture(struct Level *level, struct entity_Data *data) {
@@ -386,7 +431,9 @@ static NO_INLINE bool player_use(struct Level *level, struct entity_Data *data) 
     struct mob_Data *mob_data = (struct mob_Data *) &data->data;
 
     const u8 dir = mob_data->dir;
-    const u8 range = 12;
+    // reaches the centre of the tile in front: furniture placed right
+    // next to the player is in reach without a step
+    const u8 range = 16;
     i32 x0 = data->x     - ((dir & 1) == 0) * 8 - (dir == 1) * range + (dir == 3) * 4;
     i32 y0 = data->y - 2 - ((dir & 1) == 1) * 8 - (dir == 0) * range + (dir == 2) * 4;
     i32 x1 = data->x     + ((dir & 1) == 0) * 8 + (dir == 3) * range - (dir == 1) * 4;

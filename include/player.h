@@ -33,16 +33,19 @@ extern u16 player_invulnerable_time;
 #define PLAYER_MAX_HP      (10)
 #define PLAYER_MAX_STAMINA (10)
 
-INLINE bool player_active_item_is_enchanted(void) {
-    return player_active_item.type < ITEM_TYPES &&
-           ITEM_S(&player_active_item)->class == ITEMCLASS_TOOL &&
-           player_active_item.enchanted;
+#define MAX_ENCHANT_LEVEL (2)
+
+// 0 if the active item is not an enchanted tool, else 1 or 2
+INLINE u8 player_active_item_enchant_level(void) {
+    if(player_active_item.type < ITEM_TYPES &&
+       ITEM_S(&player_active_item)->class == ITEMCLASS_TOOL)
+        return player_active_item.enchanted;
+    return 0;
 }
 
 INLINE bool player_pay_stamina(u8 amount) {
-    // enchanted tools cost half the stamina
-    if(player_active_item_is_enchanted())
-        amount /= 2;
+    // enchanted tools cost half (level 1) or a quarter (level 2)
+    amount >>= player_active_item_enchant_level();
 
     if(player_stamina >= amount) {
         player_stamina -= amount;

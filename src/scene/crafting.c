@@ -35,16 +35,17 @@ static_assert(ANVIL_RECIPES     <= MAX_RECIPES, "too many recipes");
 static u16 crafting_count(struct Inventory *inventory,
                           u8 item_type, u8 tool_level) {
     if(item_is_resource(item_type)) {
+        // FIXED BUG - the original game only checked the first slot,
+        // but a resource can be split in two slots (another bug, in the
+        // inventory menu): count all of them
+        u16 count = 0;
         for(u32 i = 0; i < inventory->size; i++) {
             struct item_Data *item_data = &inventory->items[i];
 
-            // Bug in the original game: the possibility that items
-            // might be split in two different slots (due to another
-            // bug in inventory menu) is ignored, so only the first
-            // item's count is checked.
             if(item_data->type == item_type)
-                return item_data->count;
+                count += item_data->count;
         }
+        return count;
     } else {
         u16 count = 0;
         for(u32 i = 0; i < inventory->size; i++) {
@@ -183,6 +184,13 @@ static void crafting_draw(void) {
 
         item_draw_icon(&data, craft_x + 1, craft_y + 1 + i, false);
         item_write_name(&data, palette, craft_x + 2, craft_y + 1 + i);
+
+        // recipes making more than one item: "PLANKS X2"
+        if(recipe->result_count > 1) {
+            screen_write("X", palette, craft_x + 9, craft_y + 1 + i);
+            SCREEN_WRITE_NUMBER(recipe->result_count, 10, 1, false,
+                                palette, craft_x + 10, craft_y + 1 + i);
+        }
     }
 
     // draw cursor arrows

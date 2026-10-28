@@ -23,12 +23,15 @@
 #include "inventory.h"
 #include "scene.h"
 #include "survival.h"
+#include "storage.h"
 #include "sound.h"
 
 // What the mod items do when the player presses A (item_use) or uses a
 // bed or enchanting table with B (item_use_furniture). Runs from ROM.
 
-#define ENCHANT_COST (30)
+// XP cost of enchant level 1 and 2
+#define ENCHANT_COST_1 (30)
+#define ENCHANT_COST_2 (60)
 
 // arrow speed, in 1/64 pixels per tick
 #define ARROW_SPEED (120)
@@ -91,11 +94,16 @@ static inline void use_bucket(struct Level *level, u32 xt, u32 yt) {
                     LEVEL_SET_TILE(level, xt, yt, OBSIDIAN_TILE, 0);
                     entity_add_smash_particle(level, xt, yt);
                     set_active_item(BUCKET_ITEM);
+                } else {
+                    survival_show_message("CANT POUR", 2);
                 }
             } else if(tile == HOLE_TILE || tile == DIRT_TILE ||
                       tile == GRASS_TILE || tile == SAND_TILE) {
                 LEVEL_SET_TILE(level, xt, yt, LIQUID_TILE, 0);
                 set_active_item(BUCKET_ITEM);
+            } else {
+                survival_show_message(tile == LIQUID_TILE ? "FULL"
+                                                          : "CANT POUR", 2);
             }
             break;
 
@@ -104,6 +112,9 @@ static inline void use_bucket(struct Level *level, u32 xt, u32 yt) {
             if(deepest && (tile == HOLE_TILE || tile == DIRT_TILE)) {
                 LEVEL_SET_TILE(level, xt, yt, LIQUID_TILE, 0);
                 set_active_item(BUCKET_ITEM);
+            } else {
+                survival_show_message(tile == LIQUID_TILE ? "FULL"
+                                                          : "CANT POUR", 2);
             }
             break;
     }
@@ -196,13 +207,20 @@ THUMB
 bool item_use_furniture(struct Level *level, struct entity_Data *data,
                         struct entity_Data *furniture) {
     if(furniture->type == BED_ENTITY) {
-        // sleep: heal and respawn here
+        // sleep: heal, respawn here, skip the night and save the game
         struct mob_Data *mob_data = (struct mob_Data *) &data->data;
         mob_data->hp = PLAYER_MAX_HP;
 
         spawn_level = current_level;
         spawn_xt = data->x >> 4;
         spawn_yt = data->y >> 4;
+
+        survival_sleep();
+
+        if(storage_save())
+            survival_show_message("SAVED", 3);
+        else
+            survival_show_message("NOT SAVED", 2);
 
         SOUND_PLAY(sound_craft);
         return true;
@@ -212,17 +230,23 @@ bool item_use_furniture(struct Level *level, struct entity_Data *data,
         const bool is_tool = player_active_item.type < ITEM_TYPES &&
             ITEM_S(&player_active_item)->class == ITEMCLASS_TOOL;
 
+        const u8 enchant_level = player_active_item.enchanted;
+        const u16 cost = (enchant_level == 0) ? ENCHANT_COST_1
+                                              : ENCHANT_COST_2;
+
         if(!is_tool) {
             survival_show_message("NEED TOOL", 2);
-        } else if(player_active_item.enchanted) {
-            survival_show_message("ALREADY", 2);
-        } else if(player_xp < ENCHANT_COST) {
-            survival_show_message("NEED 30 XP", 2);
+        } else if(enchant_level >= MAX_ENCHANT_LEVEL) {
+            survival_show_message("MAX LEVEL", 2);
+        } else if(player_xp < cost) {
+            survival_show_message(enchant_level == 0 ? "NEED 30 XP"
+                                                     : "NEED 60 XP", 2);
         } else {
-            player_xp -= ENCHANT_COST;
-            player_active_item.enchanted = 1;
+            player_xp -= cost;
+            player_active_item.enchanted = enchant_level + 1;
 
-            survival_show_message("ENCHANTED!", 3);
+            survival_show_message(enchant_level == 0 ? "ENCHANTED!"
+                                                     : "LEVEL II!", 3);
             SOUND_PLAY(sound_craft);
         }
         return true;

@@ -592,6 +592,7 @@ static NO_INLINE void generate_mod_tiles(void) {
 THUMB
 static NO_INLINE void generate_mod_entities(void) {
     spawn_level = NO_SPAWN_POINT;
+    day_time = 0;
 
     // the magma golem guards the deepest level
     for(u32 attempt = 0; attempt < 10000; attempt++) {
