@@ -29,7 +29,7 @@ def palette_rows(pal):
     return [set(pp[x, y] for x in range(16)) for y in range(pal.size[1])]
 
 def resolve(img, box, rows):
-    cols = set(img.crop(box).getdata())
+    cols = set(img.crop(box).get_flattened_data())
     return next((i for i, rs in enumerate(rows) if cols <= rs), None)
 
 def add_colours(pal, adds):
@@ -90,7 +90,7 @@ def bg_tile_rows(rows):
                 if name == 'level' and (tx // 2) + (ty // 2) * 11 in BLOCKS:
                     continue
                 box = (tx * 8, ty * 8, tx * 8 + 8, ty * 8 + 8)
-                cols = set(img.crop(box).getdata()) - {MAG}
+                cols = set(img.crop(box).get_flattened_data()) - {MAG}
                 if cols:
                     out[(name, tx, ty)] = next(
                         (i for i, rs in enumerate(rows) if cols <= rs), None
@@ -114,7 +114,7 @@ bpal.save(f'{RES}/palettes/background.png')
 # colours; drawing it with another row is fine only if each colour sits at
 # the same index there
 def tile_draws_right(img, box, row, rows, pal_px):
-    cols = set(img.crop(box).getdata()) - {MAG}
+    cols = set(img.crop(box).get_flattened_data()) - {MAG}
     first = next((i for i, rs in enumerate(rows) if cols <= rs), None)
     if first is None:
         return False

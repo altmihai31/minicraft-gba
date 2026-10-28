@@ -143,6 +143,14 @@ clean-deps:
 res: $(RES_OUT_DIRS)
 	tools/res2gba/res2gba "$(RES_DIR)/resources.json"
 
+# smoke test of the normal ROM in mGBA (tools/test/smoke.py); needs
+# arm-none-eabi-gdb and mGBA, and the ROM built first
+PYTHON ?= python
+
+.PHONY: test
+test:
+	$(PYTHON) tools/test/smoke.py
+
 .PHONY: release
 release:
 	tools/release "$(OUT)"

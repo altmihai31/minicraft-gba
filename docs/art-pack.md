@@ -135,6 +135,8 @@ Notes:
 | 107 | armor empty |
 
 Same pattern as hearts/stamina: `BG3_TILEMAP[...] = (104 + (hunger <= i)) | 10 << 12;`
+The full armor pip is the only tile using palette 10 indices 5 and 6: `survival_draw_status_bar` rewrites them
+every frame with the worn armor's colours.
 
 ## Palette additions (free slots only - every existing sprite looks the same)
 - background.png rows 1, 5, 7, 10 (blocks + HUD greys); row 9 (clay bricks); row 8 indices 3/12/13
@@ -143,6 +145,7 @@ Same pattern as hearts/stamina: `BG3_TILEMAP[...] = (104 + (hunger <= i)) | 10 <
 - sprites.png: row 6 + red, new rows 8-11
 
 ## Source
+`docs/previews/` is generated from `res/` by `python tools/art-source/make_previews.py` (rerun after art changes).
 `tools/art-source/`: `blocks.py` (blocks), `art_items.py` + `art_mobs.py` (pixel grids),
 `build_art.py` (assembled the original pack by appending to the upstream sheets), `preview_art.py`.
 
