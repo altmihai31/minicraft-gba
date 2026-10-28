@@ -1,9 +1,54 @@
 # Minicraft Expanded Edition
 
 A fork of Vulcalien's [Minicraft for GBA](https://github.com/Vulcalien/minicraft-gba) that adds
-Minecraft-style content without using more RAM: 14 new blocks, 40 new items, 9 new mobs (including a
-boss on the deepest level), hunger, armor, experience, enchanting, beds, buckets, fishing and a map.
-See `docs/game-design.md` for the full list. All new art is original.
+Minecraft-style content to the Game Boy Advance demake of Notch's Minicraft – **without using more RAM**
+than the original port. Everything runs on real GBA hardware limits: the world, levels and entity cap are
+unchanged, and new code lives in ROM. All new art is original pixel art.
+
+## What's new
+
+**Blocks** – coal ore, obsidian, planks, stone bricks, clay bricks, doors, pumpkins, melons, sugar cane,
+mushrooms, torches, spawners and ice. Placed planks and bricks join into walls like the original rock,
+with a lit top and a shaded south face; doors fit into them.
+
+**Mobs** – cows, pigs, chickens (lay eggs), sheep (shear for wool), wolves (tame them with a bone),
+skeletons (archers), spiders, bloaters (exploding fungus) and the **magma golem**, a boss guarding the
+deepest level.
+
+**Survival**
+- Hunger: food fills it, HP regenerates while you're fed.
+- Armor in four tiers (leather, iron, gold, gem); the HUD shows the worn tier by colour.
+- Experience from monsters, spawners and ore, spent at the **enchanting table** (level I and II: less
+  stamina, more damage).
+- **Day and night**: nights darken the surface, monsters come out, and torches, lanterns and the player
+  light the dark. A **bed** sets your respawn point, sleeps through the night and saves the game.
+
+**Items** – buckets (water and lava; water on lava makes obsidian), shears, bow and arrows, fishing rod,
+map, cooked meat and fish, mushroom stew, cake, paper, wool, string, bones and more: 40 new items with
+workbench, furnace, oven and anvil recipes.
+
+**Quality of life** – short status messages explain what happened ("CANT PLACE", "NEED 30 XP",
+"FISH!", "SAVED"...), crafting shows how many items a recipe makes, and saves use 128 KB Flash so large
+worlds fit.
+
+Full rules, numbers and recipes: [`docs/game-design.md`](docs/game-design.md). Art and palettes:
+[`docs/art-pack.md`](docs/art-pack.md), previews in [`docs/previews`](docs/previews).
+
+## Controls
+Same as the original: **A** attacks / uses the item in hand, **B** opens the inventory or uses furniture
+in front of you (crafting stations, chests, bed, enchanting table), **Start** pauses (save game).
+Placing blocks, pouring buckets, casting the rod and equipping armor are all **A** with the item in hand.
+
+## Building
+Needs `arm-none-eabi-gcc`, Python 3 with Pillow, and `make`:
+```sh
+git submodule update --init
+make -C lib/libsimplegba
+make res && make          # -> bin/minicraft-expanded-edition.gba
+```
+On Windows (Git Bash), see the notes in [`CLAUDE.md`](CLAUDE.md#windows-native-from-git-bash).
+`make DEBUG_KIT=1` builds a debug ROM that starts with every item next to test rooms for each level.
+`make test` plays the ROM in mGBA through its GDB stub and checks the main features automatically.
 
 The rest of this file is the original Minicraft for GBA readme.
 
