@@ -44,8 +44,8 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
 ## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026, all content implemented)
 - **EWRAM 97.8 % full** (256 468 B used, ~5 670 B free): 5 levels 143 290 B, collision table
   `level_solid_entities` 100 352 B, 32 chests 12 352 B. Do NOT grow world size, level count, chest count or entity cap.
-- **IWRAM 92.5 %** (30 324 B). Data ends at `0x03007674`, user stack starts at `0x03007F00` (top 256 B
-  reserved for IRQ stacks) -> **~2 190 B of stack**, no overflow check. Upstream HEAD was 97.9 % / 436 B:
+- **IWRAM 93.0 %** (30 460 B, 28.10.2026). Data ends at `0x030076FC`, user stack starts at `0x03007F00` (top
+  256 B reserved for IRQ stacks) -> **~2 050 B of stack**, no overflow check. Upstream HEAD was 97.9 % / 436 B:
   the fork freed IWRAM by moving `player_attack`/`player_use` to ROM and shrinking `struct Tile` to 8 B
   (`interact` pointers now live in the ROM table `tile_interact_list`).
 - Any plain global/static goes to IWRAM `.bss`: put new ones in EWRAM with `SBSS_SECTION`.
@@ -53,7 +53,7 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
 - `level_tick`/`level_draw` are `IWRAM_SECTION` and `tick/tiles.c` + `draw/tiles.c` are `#include`d into
   level.c as `static inline`, so every tile `case` there lands in IWRAM. Mod tiles go through the `default:`
   branch into `src/mod-tiles.c` (ROM). Largest IWRAM users: `level_draw` 10.8 KB, `game_draw` 1.6 KB.
-- ROM: 171 204 B (upstream 133 456 B).
+- ROM: 171 376 B (upstream 133 456 B).
 - Tile = 1 B type + 1 B data. Data byte holds damage/growth/etc., so a placed block can't remember what was
   under it -> broken placed blocks become dirt (plants -> grass).
 - Entity state: 8 bytes (`data[8]`); mobs get 2 bytes after `struct mob_Data`. Limit 255 entities per level
@@ -84,7 +84,8 @@ Note: dirt reuses the grass tiles drawn with palette 8; all three ores share cel
 - `code-changes.patch`: loads mobs tileset at 744; player light 320->352, lantern 336->368,
   level light 192->224 (VRAM room for the extra icons). **Already applied** – do not re-apply. The patch
   missed `clear_light()` in `src/level.c` (base dark tile 192 -> 224); that is fixed in the tree.
-- Regenerate/edit art: `tools/art-source/` (pixel grids as strings; build_art.py verifies palette rows).
+- Edit art: `tools/art-source/` grids, then `python tools/art-source/update_art.py` (in place, checks palette rows;
+  never rerun build_art.py). Style and rules: "Source" section of docs/art-pack.md.
 
 ## Design spec
 See `docs/game-design.md` for break rules, drops, item behaviour, food, armor and recipes. Everything in it is

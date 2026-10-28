@@ -714,7 +714,11 @@ const struct Tile tile_list[TILE_TYPES] = {
     },
 
     // Ice
-    { 0 }
+    {
+        .connects_to = {
+            .ice = true
+        }
+    }
 };
 
 

@@ -74,6 +74,7 @@ struct Tile {
         u8 grass  : 1;
         u8 sand   : 1;
         u8 liquid : 1;
+        u8 ice    : 1;
     } connects_to;
 
     void (*stepped_on)(struct Level *level, u32 xt, u32 yt,

@@ -32,6 +32,8 @@
     ((bool) LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.sand)
 #define CONNECTS_TO_LIQUID(level, xt, yt)\
     ((bool) LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.liquid)
+#define CONNECTS_TO_ICE(level, xt, yt)\
+    ((bool) LEVEL_GET_TILE_S((level), (xt), (yt))->connects_to.ice)
 
 FDRAW(grass_draw) {
     bool u = CONNECTS_TO_GRASS(level, xt,     yt - 1);
@@ -101,30 +103,36 @@ FDRAW(liquid_draw) {
     bool l = CONNECTS_TO_LIQUID(level, xt - 1, yt    );
     bool r = CONNECTS_TO_LIQUID(level, xt + 1, yt    );
 
-    bool su = !u & CONNECTS_TO_SAND(level, xt,     yt - 1);
-    bool sd = !d & CONNECTS_TO_SAND(level, xt,     yt + 1);
-    bool sl = !l & CONNECTS_TO_SAND(level, xt - 1, yt    );
-    bool sr = !r & CONNECTS_TO_SAND(level, xt + 1, yt    );
+    // shore palette offset: 0 dirt (3), 1 sand (4), 5 ice (8).
+    // 1 | 5 == 5, so a corner between sand and ice gets the ice shore.
+    u32 su = !u * (CONNECTS_TO_SAND(level, xt,     yt - 1) |
+                   CONNECTS_TO_ICE(level,  xt,     yt - 1) * 5);
+    u32 sd = !d * (CONNECTS_TO_SAND(level, xt,     yt + 1) |
+                   CONNECTS_TO_ICE(level,  xt,     yt + 1) * 5);
+    u32 sl = !l * (CONNECTS_TO_SAND(level, xt - 1, yt    ) |
+                   CONNECTS_TO_ICE(level,  xt - 1, yt    ) * 5);
+    u32 sr = !r * (CONNECTS_TO_SAND(level, xt + 1, yt    ) |
+                   CONNECTS_TO_ICE(level,  xt + 1, yt    ) * 5);
 
     if(u && l)
         tiles[0] = TILE_M((liquid_rand >> 0) & 3, (liquid_rand >> 2) & 3, 3);
     else
-        tiles[0] = TILE(24 + u * 7 + l * 4, 3 + (su || sl));
+        tiles[0] = TILE(24 + u * 7 + l * 4, 3 + (su | sl));
 
     if(u && r)
         tiles[1] = TILE_M((liquid_rand >> 4) & 3, (liquid_rand >> 6) & 3, 3);
     else
-        tiles[1] = TILE(25 + u * 4 + r * 3, 3 + (su || sr));
+        tiles[1] = TILE(25 + u * 4 + r * 3, 3 + (su | sr));
 
     if(d && l)
         tiles[2] = TILE_M((liquid_rand >> 8) & 3, (liquid_rand >> 10) & 3, 3);
     else
-        tiles[2] = TILE(26 + d * 5 + l * 4, 3 + (sd || sl));
+        tiles[2] = TILE(26 + d * 5 + l * 4, 3 + (sd | sl));
 
     if(d && r)
         tiles[3] = TILE_M((liquid_rand >> 12) & 3, (liquid_rand >> 14) & 3, 3);
     else
-        tiles[3] = TILE(27 + d * 2 + r * 3, 3 + (sd || sr));
+        tiles[3] = TILE(27 + d * 2 + r * 3, 3 + (sd | sr));
 }
 
 FDRAW(flower_draw) {

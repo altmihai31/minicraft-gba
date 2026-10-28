@@ -28,7 +28,7 @@ static const u8 mod_tile_palettes[TILE_TYPES - FIRST_MOD_TILE] = {
     3,  // obsidian
     0,  // planks
     2,  // stone bricks
-    10, // clay bricks
+    9,  // clay bricks
     0,  // door (closed)
     0,  // door (open)
     5,  // pumpkin

@@ -43,12 +43,12 @@ struct ModMob {
 static const struct ModMob mod_mobs[LAST_MOD_MOB - FIRST_MOD_MOB + 1] = {
     [COW_ENTITY         - FIRST_MOD_MOB] = { 744,  8, KIND_PASSIVE, 10,  0, 0 },
     [PIG_ENTITY         - FIRST_MOD_MOB] = { 764,  8, KIND_PASSIVE, 10,  0, 0 },
-    [CHICKEN_ENTITY     - FIRST_MOD_MOB] = { 784,  8, KIND_PASSIVE,  4,  0, 0 },
+    [CHICKEN_ENTITY     - FIRST_MOD_MOB] = { 784,  9, KIND_PASSIVE,  4,  0, 0 },
     [SHEEP_ENTITY       - FIRST_MOD_MOB] = { 804,  9, KIND_PASSIVE,  8,  0, 0 },
-    [WOLF_ENTITY        - FIRST_MOD_MOB] = { 844,  9, KIND_WOLF,    15,  0, 2 },
-    [SKELETON_ENTITY    - FIRST_MOD_MOB] = { 864,  8, KIND_ARCHER,  12,  6, 1 },
+    [WOLF_ENTITY        - FIRST_MOD_MOB] = { 844, 10, KIND_WOLF,    15,  0, 2 },
+    [SKELETON_ENTITY    - FIRST_MOD_MOB] = { 864, 10, KIND_ARCHER,  12,  6, 1 },
     [SPIDER_ENTITY      - FIRST_MOD_MOB] = { 884, 10, KIND_CHASER,  10,  6, 2 },
-    [BLOATER_ENTITY     - FIRST_MOD_MOB] = { 904, 10, KIND_BLOATER,  8,  4, 0 },
+    [BLOATER_ENTITY     - FIRST_MOD_MOB] = { 904, 11, KIND_BLOATER,  8,  4, 0 },
     [MAGMA_GOLEM_ENTITY - FIRST_MOD_MOB] = { 924, 11, KIND_BOSS,   600,  0, 2 }
 };
 

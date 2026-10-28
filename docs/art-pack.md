@@ -25,7 +25,7 @@ Always draw with the palette row listed here, or colours come out wrong.
 | 23 | 92-95 | 3 | obsidian |
 | 24 | 96-99 | 0 | planks |
 | 25 | 100-103 | 2 | stone bricks |
-| 26 | 104-107 | 10 | clay bricks |
+| 26 | 104-107 | 9 | clay bricks |
 | 27 | 108-111 | 0 | door closed |
 | 28 | 112-115 | 0 | door open |
 | 29 | 116-119 | 5 | pumpkin |
@@ -96,17 +96,17 @@ Sprite tile = 744 + cell * 4. New sprite palette rows 8-11 keep the hurt-flash l
 |---|---:|---:|---|
 | 0-4 | 744 | 8 | cow |
 | 5-9 | 764 | 8 | pig |
-| 10-14 | 784 | 8 | chicken |
+| 10-14 | 784 | 9 | chicken |
 | 15-19 | 804 | 9 | sheep |
 | 20-24 | 824 | 9 | sheep (sheared) |
-| 25-29 | 844 | 9 | wolf |
-| 30-34 | 864 | 8 | skeleton |
+| 25-29 | 844 | 10 | wolf |
+| 30-34 | 864 | 10 | skeleton |
 | 35-39 | 884 | 10 | spider |
-| 40-44 | 904 | 10 | bloater |
+| 40-44 | 904 | 11 | bloater |
 | 45-49 | 924 | 11 | magma golem |
 | 50 | 944 | 9 | arrow (horizontal) |
 | 51 | 948 | 9 | arrow (vertical) |
-| 52 | 952 | 11 | ember orb (XP) |
+| 52 | 952 | 11 | XP orb |
 | 53 | 956 | 6 | bed |
 | 54 | 960 | 6 | enchanting table |
 
@@ -128,13 +128,30 @@ Notes:
 Same pattern as hearts/stamina: `BG3_TILEMAP[...] = (104 + (hunger <= i)) | 10 << 12;`
 
 ## Palette additions (free slots only - every existing sprite looks the same)
-- background.png rows 1, 5, 7, 10 (blocks + HUD greys)
+- background.png rows 1, 5, 7, 10 (blocks + HUD greys); row 9 (clay bricks); row 8 indices 3/12/13
+  (ice shore: water's shore tiles 24-31 drawn with palette 8 next to ice, `connects_to.ice`)
 - items.png rows 0, 1, 3
 - sprites.png: row 6 + red, new rows 8-11
 
 ## Source
-`source/` regenerates everything: `blocks.py` (blocks), `art_items.py` + `art_mobs.py` (pixel grids),
-`build_art.py` (assembles sheets, adds colours, verifies palette rows), `preview_art.py`.
-Edit a grid string, rerun, and the palette check tells you if a colour breaks a tile.
+`tools/art-source/`: `blocks.py` (blocks), `art_items.py` + `art_mobs.py` (pixel grids),
+`build_art.py` (assembled the original pack by appending to the upstream sheets), `preview_art.py`.
+
+`build_art.py` must not be run again: it would append a second copy. To change mod art now, edit
+`art_mobs.py` (mobs, bed, enchanting table, arrows, XP orb) or `art_blocks_v2.py` (revised blocks/icons)
+and run `python tools/art-source/update_art.py [preview.png]`. It overwrites the mod cells in `res/` in
+place, rewrites sprite palette rows 8-11 from `art_mobs.SPRITE_ROWS`, asserts every cell still resolves to
+the palette row the game draws it with, and refuses to add a background colour that would move any existing
+tile to another row. Then reconvert (`res2gba-win.py`) and build.
+
+Mobs (27.10.2026): hand-drawn at 16x16 from the owner's reference sheet, made original rather than copies of
+Minecraft's mobs. Grids in `art_mobs.py` hold fills only; `outline()` adds the black outline. Front/back are
+drawn mid-stride (the game mirrors them to walk). Palette budget: each of rows 8-11 holds exactly 7 colours +
+black, shared by the mobs on that row (row 8 cow/pig, 9 chicken/sheep/arrows, 10 wolf/skeleton/spider,
+11 bloater/golem/XP orb). Every frame needs at least one colour its earlier rows don't have, or it resolves
+to an earlier row and draws with the wrong colours - `update_art.py` checks this.
+
+Blocks/icons revision 27.10.2026: clay bricks use the stone-brick pattern (moved to BG palette row 9); doors
+lost their black frame; stone-brick and brick icons share one brick pattern.
 
 All sprites are original pixel art made for this fork.
