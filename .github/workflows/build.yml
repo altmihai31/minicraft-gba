@@ -68,6 +68,13 @@ jobs:
         run: |
           # the newest CHANGELOG.md section, without its heading
           awk '/^## \[/ { n++; next } n == 1' CHANGELOG.md > notes.md
-          gh release create "$GITHUB_REF_NAME" rom/*.gba \
-            --title "Minicraft Expanded Edition ${GITHUB_REF_NAME#ee-v}" \
-            --notes-file notes.md
+
+          # a re-pushed tag updates its release instead of failing
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" rom/*.gba --clobber
+            gh release edit "$GITHUB_REF_NAME" --notes-file notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" rom/*.gba \
+              --title "Minicraft Expanded Edition ${GITHUB_REF_NAME#ee-v}" \
+              --notes-file notes.md
+          fi
