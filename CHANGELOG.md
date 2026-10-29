@@ -5,6 +5,8 @@
 - Torches show the ground they stand on (grass, sand, or the level's dirt
   colour underground) instead of a brown square with a border around it,
   and leave that ground when broken.
+- Skeletons no longer flicker and slide while aiming: they stand still facing
+  the player, and back off (facing where they walk) when the player gets close.
 
 ## [Expanded Edition 1.0] - 28.10.2026
 First release of Minicraft Expanded Edition, a fork of Minicraft for GBA 2.0.

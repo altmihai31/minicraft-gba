@@ -89,7 +89,8 @@ Everything above is implemented. Where the spec was open or the code differs:
   deepest level, onto hole/dirt. Filling a bucket leaves a hole (which refills from neighbouring liquid).
 - **Mobs:** passive animals wander and flee when hit; chickens lay eggs (~1 per 40 s), sheep regrow wool
   (~1 min). Wolves: neutral, angry for 4 s when hit; a bone has a 1/3 chance to tame (always consumed);
-  tamed wolves follow the player and bite hostiles. Skeletons keep distance, shoot every ~2 s within 5 tiles
+  tamed wolves follow the player and bite hostiles. Skeletons stand still facing the player within 5 tiles and shoot every
+  ~2 s; closer than 2 tiles they walk away until 3 tiles off
   (1 dmg, 2 on the two deepest levels). Spiders chase within 4 tiles at full speed. Bloaters walk up and
   explode after ~0.75 s near the player (5 + depth dmg, 3x3 soft tiles -> dirt). Golem: 600 HP, spark ring
   every 2.5 s, generated once on the deepest level, never despawns.

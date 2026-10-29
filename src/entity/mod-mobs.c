@@ -60,7 +60,7 @@ struct modmob_Data {
     i8 ym : 2;
 
     u8 move_flag : 1;
-    u8 flag      : 1; // sheep: sheared, wolf: tamed
+    u8 flag      : 1; // sheep: sheared, wolf: tamed, skeleton: backing off
     u8 depth     : 2; // 0 = surface or sky, 3 = deepest level
 
     // passive: flee time, wolf: anger/attack delay,
@@ -284,6 +284,7 @@ ETICK_ROM(mod_mob_tick) {
     bool chase = false;
     bool flee  = false;
     bool fast  = false;
+    bool hold  = false; // stand still (skeleton aiming)
     i32 txd = xd, tyd = yd; // target offset
 
     switch(mob->kind) {
@@ -343,13 +344,26 @@ ETICK_ROM(mod_mob_tick) {
             if(modmob_data->timer > 0)
                 modmob_data->timer--;
 
-            if(dist < 80 * 80) {
-                if(dist < 32 * 32)
-                    flee = true;
+            // back off when the player comes within 2 tiles, until 3
+            // tiles away ('flag': no flip-flop at the edge)
+            if(dist < 32 * 32)
+                modmob_data->flag = 1;
+            else if(dist > 48 * 48)
+                modmob_data->flag = 0;
 
-                // face the player
-                mob_data->dir = (math_abs(xd) > math_abs(yd)) ?
-                                (xd < 0 ? 1 : 3) : (yd < 0 ? 0 : 2);
+            if(dist < 80 * 80) {
+                if(modmob_data->flag) {
+                    // walk away, facing where it walks
+                    flee = true;
+                } else {
+                    // stand still and face the player: turning to aim
+                    // while walking flipped the sprite every tick
+                    hold = true;
+                    modmob_data->xm = 0;
+                    modmob_data->ym = 0;
+                    mob_data->dir = (math_abs(xd) > math_abs(yd)) ?
+                                    (xd < 0 ? 1 : 3) : (yd < 0 ? 0 : 2);
+                }
 
                 if(modmob_data->timer == 0) {
                     shoot_at(level, data, xd, yd);
@@ -403,7 +417,7 @@ ETICK_ROM(mod_mob_tick) {
         modmob_data->ym * step
     );
 
-    if(!chase && !flee && (!moved || random(100) == 0))
+    if(!chase && !flee && !hold && (!moved || random(100) == 0))
         wander(modmob_data);
 }
 
