@@ -35,7 +35,7 @@ static const u8 mod_tile_palettes[TILE_TYPES - FIRST_MOD_TILE] = {
     1,  // melon
     0,  // sugar cane
     10, // mushroom
-    10, // torch
+    3,  // torch (on dirt; see mod_tile_draw)
     7,  // spawner
     6   // ice
 };
@@ -89,6 +89,18 @@ void mod_tile_draw(struct Level *level, u32 xt, u32 yt, u16 tiles[4]) {
                           (tile - PLANKS_TILE) * 20) | palette;
         connected_draw(level, xt, yt, tile, base, tiles);
         return;
+    }
+
+    // a torch stands on the ground it was placed on (data byte): dirt
+    // is cell 33, grass cell 51, sand cell 52 (palette 5)
+    if(tile == TORCH_TILE) {
+        const u32 ground = LEVEL_GET_DATA(level, xt, yt);
+        if(ground == TORCH_ON_GRASS || ground == TORCH_ON_SAND) {
+            const u16 base = ((50 + ground) * 4) | 5 << 12;
+            for(u32 i = 0; i < 4; i++)
+                tiles[i] = base + i;
+            return;
+        }
     }
 
     // every other mod tile is a full 16x16 cell: cell = tile ID

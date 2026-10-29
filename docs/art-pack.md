@@ -29,12 +29,18 @@ Always draw with the palette row listed here, or colours come out wrong.
 | 30 | 120-123 | 1 | melon |
 | 31 | 124-127 | 0 | sugar cane |
 | 32 | 128-131 | 10 | mushrooms |
-| 33 | 132-135 | 10 | torch |
+| 33 | 132-135 | 3 | torch on dirt (row 3 indices 12/13 = the level's dirt colours) |
 | 34 | 136-139 | 7 | spawner |
 | 35 | 140-143 | 6 | ice |
 | 36-40 | 144-163 | 0 | planks, connected (placed) |
 | 41-45 | 164-183 | 2 | stone bricks, connected (placed) |
 | 46-50 | 184-203 | 9 | clay bricks, connected (placed) |
+| 51 | 204-207 | 5 | torch on grass |
+| 52 | 208-211 | 5 | torch on sand |
+
+A torch's tile data byte keeps the ground it was placed on (0 dirt, 1 grass, 2 sand): `mod_tile_draw`
+picks cell 33, 51 or 52, and breaking it leaves that ground. Grass and sand treat a torch as their own kind,
+so they draw no border around it.
 
 Placed planks, stone bricks and clay bricks join their own kind like rock (square edges): white rim on
 exposed top/left sides, a dark south face, transparent ground outside (shows the level's dirt colour).

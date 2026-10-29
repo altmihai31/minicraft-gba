@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+- Torches show the ground they stand on (grass, sand, or the level's dirt
+  colour underground) instead of a brown square with a border around it,
+  and leave that ground when broken.
+
 ## [Expanded Edition 1.0] - 28.10.2026
 First release of Minicraft Expanded Edition, a fork of Minicraft for GBA 2.0.
 **(!) Saves use a new 128 KB Flash layout: Minicraft for GBA saves can't be

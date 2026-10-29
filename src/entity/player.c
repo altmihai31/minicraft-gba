@@ -323,7 +323,8 @@ static inline void player_place(struct Level *level, struct entity_Data *data) {
         tile_interact_list[tile](level, xt, yt, &hand);
     }
 
-    LEVEL_SET_TILE(level, xt, yt, item->placed_tile, 0);
+    const u8 tile_data = (item->placed_tile == TORCH_TILE) ? torch_ground_of(tile) : 0;
+    LEVEL_SET_TILE(level, xt, yt, item->placed_tile, tile_data);
 
     player_active_item.count--;
     if(player_active_item.count == 0)

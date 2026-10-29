@@ -57,7 +57,8 @@ Everything above is implemented. Where the spec was open or the code differs:
 - **Doors:** hand and tools other than axe/pick open/close a door; so do materials, placeables, furniture
   and the power glove. Food, armor, bow, map etc. keep their own action. A door can't close on a mob.
 - **Placeables:** planks, stone bricks, brick, door and torch on grass/dirt/sand/flower/farmland/wheat (a flower
-  or crop underneath drops as if harvested); pumpkin on grass; sugar cane on grass/sand; mushroom on dirt.
+  or crop underneath drops as if harvested; a torch keeps its ground, drawn under it and left when broken);
+  pumpkin on grass; sugar cane on grass/sand; mushroom on dirt.
   Placed planks, stone bricks and clay bricks join their own kind like rock (raised look, dark south face);
   doors count as part of the wall. A solid block can't be placed on a mob, furniture or a dropped item
   (BLOCKED); the wrong ground says CANT PLACE.

@@ -70,9 +70,10 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
 - `level_tick`/`level_draw` are `IWRAM_SECTION` and `tick/tiles.c` + `draw/tiles.c` are `#include`d into
   level.c as `static inline`, so every tile `case` there lands in IWRAM. Mod tiles go through the `default:`
   branch into `src/mod-tiles.c` (ROM). Largest IWRAM users: `level_draw` 10.8 KB, `game_draw` 1.6 KB.
-- ROM: 175 512 B (upstream 133 456 B).
+- ROM: 175 672 B (upstream 133 456 B).
 - Tile = 1 B type + 1 B data. Data byte holds damage/growth/etc., so a placed block can't remember what was
-  under it -> broken placed blocks become dirt (plants -> grass).
+  under it -> broken placed blocks become dirt (plants -> grass). Exception: torches break in one hit, so
+  their data byte keeps the ground (`TORCH_ON_*` in tile.h) for drawing and for what they leave.
 - Entity state: 8 bytes (`data[8]`); mobs get 2 bytes after `struct mob_Data`. Limit 255 entities per level
   shared by mobs, items, particles. Item types go up to 72: bitfields holding one need 7 bits.
 - **Saves:** 128 KB Flash (`BACKUP_FLASH_128KB`), save version byte at 0x1C (`SAVE_VERSION` in storage.c, now 2

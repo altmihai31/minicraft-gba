@@ -439,7 +439,9 @@ FINTERACT(block_interact) {
                 entity_add_item(level, xt, yt, b->drop, true);
         }
 
-        LEVEL_SET_TILE(level, xt, yt, b->leaves, 0);
+        const u8 leaves = (tile == TORCH_TILE) ?
+            torch_ground_tile(LEVEL_GET_DATA(level, xt, yt)) : b->leaves;
+        LEVEL_SET_TILE(level, xt, yt, leaves, 0);
     } else {
         LEVEL_SET_DATA(level, xt, yt, damage);
     }
@@ -709,8 +711,13 @@ const struct Tile tile_list[TILE_TYPES] = {
     // Mushroom
     { 0 },
 
-    // Torch
-    { 0 },
+    // Torch: grass and sand around it draw no border towards it
+    {
+        .connects_to = {
+            .grass = true,
+            .sand  = true
+        }
+    },
 
     // Spawner
     {

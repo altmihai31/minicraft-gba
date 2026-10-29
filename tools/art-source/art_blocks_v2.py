@@ -187,13 +187,65 @@ for b, (name, tex, row) in enumerate(CONNECTED):
     for i, g in enumerate(tiles_to_cells(connected_tiles(tex))):
         BLOCKS[CONNECTED_CELL + b * 5 + i] = (f'{name} (connected {i})', g, row)
 
+# ----------------------------------------------------------------------
+# Torches stand on the ground they were placed on (28.10.2026): the tile
+# data byte keeps it (0 dirt, 1 grass, 2 sand; see src/mod-tiles.c), and
+# each variant uses the real ground texture (the grass/dirt speckles), so
+# the torch blends with the tiles around it.
+# - dirt: BG row 3, whose indices 12/13 the game sets to the level's dirt
+#   colours (grey underground, brown on the surface)
+# - grass and sand: BG row 5 (pumpkin row: grass, sand and flame colours)
+TORCH = [
+    ".......YY.......",
+    "......YRRY......",
+    ".....YRRWRY.....",
+    ".....YRWWRY.....",
+    ".....YRWWRY.....",
+    "......RRRR......",
+    "......ORRO......",
+    "......OSSO......",
+    "......OSDO......",
+    "......OSDO......",
+    "......OSDO......",
+    "......OSDO......",
+    "......OSDOh.....",
+    ".....hODDOh.....",
+    "......hhhh......",
+    "................"]
+GROUND_SPECKS = [(2, 2), (11, 2), (5, 3), (1, 4), (13, 5), (13, 9), (2, 10), (6, 11), (10, 12), (3, 14)]
+FLAME = dict(O='080808', Y='e7e76b', R='de7b29', W='f7f7f7')
+
+def torch_on(ground, speck, legend):
+    g = [[legend.get(ch, ground) for ch in row] for row in TORCH]
+    for x, y in GROUND_SPECKS:
+        if TORCH[y][x] == '.':
+            g[y][x] = speck
+    return g
+
+TORCH_CELLS = {
+    33: ('torch on dirt', torch_on('846b6b', '523939',
+                                   dict(FLAME, S='7b6339', D='4a3121', h='523939')), 3),
+    51: ('torch on grass', torch_on('63a563', '8cd68c',
+                                    dict(FLAME, S='9c4a10', D='313118', h='317331')), 5),
+    # on sand the yellow flame tip would vanish: orange instead
+    52: ('torch on sand', torch_on('e7e76b', 'b5b55a',
+                                   dict(FLAME, Y='de7b29', S='9c4a10', D='313118', h='b5b55a')), 5),
+}
+BLOCKS.update(TORCH_CELLS)
+
 # colours added to free slots of background palette rows
 BG_ADD = {9: ['cea5a5', '9c2929', '6b2121', '211010']}
 
 # Colours that must sit at a fixed index. Water draws its shore tiles (24-35)
 # with indices 3 (water), 12 (rim) and 13 (bank): row 8 (dirt, which only uses
 # 1-2) gets an ice shore there, used by liquid_draw next to ice.
-BG_SET = {8: {3: '10108c', 12: '9494ad', 13: 'c6c6de'}}
+BG_SET = {8: {3: '10108c', 12: '9494ad', 13: 'c6c6de'},
+          # torch on dirt; 7b6339 at the same index as in row 0, so an 8x8
+          # tile holding only dirt + stick colours (it resolves to row 0)
+          # still draws right with row 3
+          3: {7: 'de7b29', 8: '7b6339', 9: '4a3121', 10: 'e7e76b', 11: 'f7f7f7'},
+          # torch on grass and sand: the flame core
+          5: {10: 'f7f7f7'}}
 
 # items.png icon -> (name, 8x8 grid, legend, items palette row)
 BRICK_ICON = [
