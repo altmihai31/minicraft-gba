@@ -60,8 +60,8 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
 ## Hard constraints (measured from the ELF, GCC 14.2.Rel1, 26.10.2026, all content implemented)
 - **EWRAM 97.8 % full** (256 480 B used, ~5 660 B free): 5 levels 143 290 B, collision table
   `level_solid_entities` 100 352 B, 32 chests 12 352 B. Do NOT grow world size, level count, chest count or entity cap.
-- **IWRAM 92.8 %** (30 420 B, 28.10.2026). Data ends at `0x030076D4`, user stack starts at `0x03007F00` (top
-  256 B reserved for IRQ stacks) -> **~2 090 B of stack**, no overflow check (the debug build shows the
+- **IWRAM 92.9 %** (30 436 B, 30.10.2026). Data ends at `0x030076E4`, user stack starts at `0x03007F00` (top
+  256 B reserved for IRQ stacks) -> **~2 070 B of stack**, no overflow check (the debug build shows the
   stack high-water mark). Upstream HEAD was 97.9 % / 436 B:
   the fork freed IWRAM by moving `player_attack`/`player_use` to ROM and shrinking `struct Tile` to 8 B
   (`interact` pointers now live in the ROM table `tile_interact_list`).
@@ -70,10 +70,11 @@ which contains none of this code. `src/debug-kit.c`, active only with `-DDEBUG_K
 - `level_tick`/`level_draw` are `IWRAM_SECTION` and `tick/tiles.c` + `draw/tiles.c` are `#include`d into
   level.c as `static inline`, so every tile `case` there lands in IWRAM. Mod tiles go through the `default:`
   branch into `src/mod-tiles.c` (ROM). Largest IWRAM users: `level_draw` 10.8 KB, `game_draw` 1.6 KB.
-- ROM: 175 896 B (upstream 133 456 B).
+- ROM: 175 864 B (upstream 133 456 B).
 - Tile = 1 B type + 1 B data. Data byte holds damage/growth/etc., so a placed block can't remember what was
-  under it -> broken placed blocks become dirt (plants -> grass). Exception: torches break in one hit, so
-  their data byte keeps the ground (`TORCH_ON_*` in tile.h) for drawing and for what they leave.
+  under it -> broken placed blocks become dirt (plants -> grass). Exception: torches are three tile types by
+  ground (`TORCH_TILE`, `TORCH_GRASS_TILE` 36, `TORCH_SAND_TILE` 37; `torch_tile_on`/`is_torch` in tile.h),
+  because neighbour rules (`connects_to`) are per tile type. Mod tile IDs 36+ don't map to cells 36+.
 - Entity state: 8 bytes (`data[8]`); mobs get 2 bytes after `struct mob_Data`. Limit 255 entities per level
   shared by mobs, items, particles. Item types go up to 72: bitfields holding one need 7 bits.
 - **Saves:** 128 KB Flash (`BACKUP_FLASH_128KB`), save version byte at 0x1C (`SAVE_VERSION` in storage.c, now 2

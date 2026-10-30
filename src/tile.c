@@ -398,6 +398,12 @@ static const struct BlockBreak block_breaks[TILE_TYPES - FIRST_MOD_TILE] = {
     [TORCH_TILE - FIRST_MOD_TILE] = {
         BREAK_ANY, 0, 1, TORCH_ITEM, 1, 0, DIRT_TILE
     },
+    [TORCH_GRASS_TILE - FIRST_MOD_TILE] = {
+        BREAK_ANY, 0, 1, TORCH_ITEM, 1, 0, GRASS_TILE
+    },
+    [TORCH_SAND_TILE - FIRST_MOD_TILE] = {
+        BREAK_ANY, 0, 1, TORCH_ITEM, 1, 0, SAND_TILE
+    },
     [SPAWNER_TILE - FIRST_MOD_TILE] = {
         BREAK_PICK, 2, 150, DROP_XP, 5, 5, DIRT_TILE
     },
@@ -439,9 +445,7 @@ FINTERACT(block_interact) {
                 entity_add_item(level, xt, yt, b->drop, true);
         }
 
-        const u8 leaves = (tile == TORCH_TILE) ?
-            torch_ground_tile(LEVEL_GET_DATA(level, xt, yt)) : b->leaves;
-        LEVEL_SET_TILE(level, xt, yt, leaves, 0);
+        LEVEL_SET_TILE(level, xt, yt, b->leaves, 0);
     } else {
         LEVEL_SET_DATA(level, xt, yt, damage);
     }
@@ -711,13 +715,8 @@ const struct Tile tile_list[TILE_TYPES] = {
     // Mushroom
     { 0 },
 
-    // Torch: grass and sand around it draw no border towards it
-    {
-        .connects_to = {
-            .grass = true,
-            .sand  = true
-        }
-    },
+    // Torch (on dirt)
+    { 0 },
 
     // Spawner
     {
@@ -729,6 +728,20 @@ const struct Tile tile_list[TILE_TYPES] = {
     {
         .connects_to = {
             .ice = true
+        }
+    },
+
+    // Torch on grass: joins grass like grass does
+    {
+        .connects_to = {
+            .grass = true
+        }
+    },
+
+    // Torch on sand: joins sand like sand does
+    {
+        .connects_to = {
+            .sand = true
         }
     }
 };
@@ -770,5 +783,7 @@ const tile_interact_fn tile_interact_list[TILE_TYPES] = {
     block_interact,        // Mushroom
     block_interact,        // Torch
     block_interact,        // Spawner
-    block_interact         // Ice
+    block_interact,        // Ice
+    block_interact,        // Torch on grass
+    block_interact         // Torch on sand
 };

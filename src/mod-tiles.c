@@ -35,9 +35,11 @@ static const u8 mod_tile_palettes[TILE_TYPES - FIRST_MOD_TILE] = {
     1,  // melon
     0,  // sugar cane
     10, // mushroom
-    3,  // torch (on dirt; see mod_tile_draw)
+    3,  // torch (on dirt)
     7,  // spawner
-    6   // ice
+    6,  // ice
+    5,  // torch on grass
+    5   // torch on sand
 };
 
 // Planks, stone bricks and clay bricks join their own kind like rock:
@@ -91,20 +93,11 @@ void mod_tile_draw(struct Level *level, u32 xt, u32 yt, u16 tiles[4]) {
         return;
     }
 
-    // a torch stands on the ground it was placed on (data byte): dirt
-    // is cell 33, grass cell 51, sand cell 52 (palette 5)
-    if(tile == TORCH_TILE) {
-        const u32 ground = LEVEL_GET_DATA(level, xt, yt);
-        if(ground == TORCH_ON_GRASS || ground == TORCH_ON_SAND) {
-            const u16 base = ((50 + ground) * 4) | 5 << 12;
-            for(u32 i = 0; i < 4; i++)
-                tiles[i] = base + i;
-            return;
-        }
-    }
-
-    // every other mod tile is a full 16x16 cell: cell = tile ID
-    const u16 base = (tile * 4) | palette;
+    // every other mod tile is a full 16x16 cell: cell = tile ID, except
+    // the torches on grass and sand (cells 51 and 52; 36-50 are walls)
+    const u32 cell = (tile == TORCH_GRASS_TILE) ? 51 :
+                     (tile == TORCH_SAND_TILE)  ? 52 : tile;
+    const u16 base = (cell * 4) | palette;
     tiles[0] = base;
     tiles[1] = base + 1;
     tiles[2] = base + 2;
@@ -225,7 +218,7 @@ void mod_tile_draw_torch_light(struct Level *level) {
 
     for(i32 y = -3; y < 10 + 3; y++) {
         for(i32 x = -3; x < 16 + 3; x++) {
-            if(LEVEL_GET_TILE(level, x0 + x, y0 + y) != TORCH_TILE)
+            if(!is_torch(LEVEL_GET_TILE(level, x0 + x, y0 + y)))
                 continue;
 
             const i32 xr = x * 2 + 1;

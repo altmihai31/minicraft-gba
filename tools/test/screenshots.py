@@ -139,8 +139,7 @@ def build_scene():
         for dy in range(1, 5):
             edge = dx in (0, 4) or dy in (1, 4)
             house.append(T(dx, dy, 25 if edge else 0))
-    house += [T(2, 1, 27), T(2, 2, 33)]  # door, torch inside
-    house.append(f'set {smoke.mem("$lv + 12544 + $px + 2 + ($py + 2) * 112")} = 1')  # torch on grass
+    house += [T(2, 1, 27), T(2, 2, 36)]  # door, torch on the grass floor
     # away from the animals the debug kit puts at y -3 and +3 (x -1..3),
     # so none wanders against a wall before the shot
     house += [T(dx, -3, 24) for dx in range(-8, -4)]  # planks wall

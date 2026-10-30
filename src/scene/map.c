@@ -76,6 +76,7 @@ static inline u32 tile_color(u32 tile) {
         case PUMPKIN_TILE:
         case MELON_TILE:
         case SUGAR_CANE_TILE:
+        case TORCH_GRASS_TILE:
             return COLOR_GRASS;
 
         case LIQUID_TILE:
@@ -86,6 +87,7 @@ static inline u32 tile_color(u32 tile) {
         case SAND_TILE:
         case CACTUS_TILE:
         case CACTUS_SAPLING_TILE:
+        case TORCH_SAND_TILE:
             return COLOR_SAND;
 
         case TREE_TILE:

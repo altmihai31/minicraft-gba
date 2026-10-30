@@ -31,7 +31,7 @@ LEVEL_SIZE = LEVEL_W * LEVEL_W
 LEVEL_BYTES = 2 * LEVEL_SIZE + 255 * 14
 ENTITIES = 2 * LEVEL_SIZE
 GRASS, ROCK, FLOWER, FARMLAND, WHEAT = 0, 1, 3, 11, 12
-PLANKS_TILE, TORCH_TILE = 24, 33
+PLANKS_TILE, TORCH_GRASS_TILE = 24, 36
 PLANKS, TORCH, SWORD, TABLE, BED, WORKBENCH = 33, 39, 28, 72, 66, 21
 ITEM_ENTITY, XP_ORB_ENTITY = 10, 24
 IRON_ORE, PICK, GOLD_ARMOR = 18, 30, 70
@@ -274,7 +274,7 @@ EXPECT_PLAY = {
     'planks_flower.tile': PLANKS_TILE, 'planks_flower.count': 4,
     'planks_farmland.tile': PLANKS_TILE, 'planks_farmland.count': 4,
     'planks_wheat.tile': PLANKS_TILE, 'planks_wheat.count': 4,
-    'torch_flower.tile': TORCH_TILE, 'torch_flower.count': 4,
+    'torch_flower.tile': TORCH_GRASS_TILE, 'torch_flower.count': 4,
     'rock.message': 'CANT PLACE', 'rock.tile': ROCK,
     'ench_planks.message': 'NEED TOOL',
     'ench_noxp.message': 'NEED 30 XP', 'ench_noxp.level': 0,

@@ -21,7 +21,7 @@
 #include "level.h"
 #include "item.h"
 
-#define TILE_TYPES (36)
+#define TILE_TYPES (38)
 
 #define GRASS_TILE          (0)
 #define ROCK_TILE           (1)
@@ -63,26 +63,23 @@
 #define SPAWNER_TILE        (34)
 #define ICE_TILE            (35)
 
-// A torch breaks in one hit, so its data byte never holds damage: it keeps
-// the ground the torch was placed on, drawn under it and left when broken.
-#define TORCH_ON_DIRT  (0)
-#define TORCH_ON_GRASS (1)
-#define TORCH_ON_SAND  (2)
+// A torch looks and joins like the ground it was placed on, so there is one
+// tile type per ground: TORCH_TILE on dirt (and farmland, wheat), and these.
+// Neighbour rules (grass borders, water shores) come from the tile type.
+#define TORCH_GRASS_TILE    (36)
+#define TORCH_SAND_TILE     (37)
 
-INLINE u8 torch_ground_of(u8 tile) {
-    if(tile == GRASS_TILE || tile == FLOWER_TILE)
-        return TORCH_ON_GRASS;
-    if(tile == SAND_TILE)
-        return TORCH_ON_SAND;
-    return TORCH_ON_DIRT;
+INLINE u8 torch_tile_on(u8 ground) {
+    if(ground == GRASS_TILE || ground == FLOWER_TILE)
+        return TORCH_GRASS_TILE;
+    if(ground == SAND_TILE)
+        return TORCH_SAND_TILE;
+    return TORCH_TILE;
 }
 
-INLINE u8 torch_ground_tile(u8 ground) {
-    if(ground == TORCH_ON_GRASS)
-        return GRASS_TILE;
-    if(ground == TORCH_ON_SAND)
-        return SAND_TILE;
-    return DIRT_TILE;
+INLINE bool is_torch(u8 tile) {
+    return tile == TORCH_TILE || tile == TORCH_GRASS_TILE ||
+           tile == TORCH_SAND_TILE;
 }
 
 // Kept small: this table lives in IWRAM.

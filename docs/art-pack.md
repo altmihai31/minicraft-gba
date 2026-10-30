@@ -38,9 +38,9 @@ Always draw with the palette row listed here, or colours come out wrong.
 | 51 | 204-207 | 5 | torch on grass |
 | 52 | 208-211 | 5 | torch on sand |
 
-A torch's tile data byte keeps the ground it was placed on (0 dirt, 1 grass, 2 sand): `mod_tile_draw`
-picks cell 33, 51 or 52, and breaking it leaves that ground. Grass and sand treat a torch as their own kind,
-so they draw no border around it.
+A torch is one of three tile types, by the ground it was placed on: `TORCH_TILE` (33, on dirt),
+`TORCH_GRASS_TILE` (36, drawn from cell 51) and `TORCH_SAND_TILE` (37, cell 52). Each has its ground's
+neighbour rules (grass/sand borders, water shores) and leaves its ground when broken.
 
 Placed planks, stone bricks and clay bricks join their own kind like rock (square edges): white rim on
 exposed top/left sides, a dark south face, transparent ground outside (shows the level's dirt colour).
