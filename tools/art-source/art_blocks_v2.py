@@ -225,13 +225,68 @@ def torch_on(ground, speck, legend):
 TORCH_CELLS = {
     33: ('torch on dirt', torch_on('846b6b', '523939',
                                    dict(FLAME, S='7b6339', D='4a3121', h='523939')), 3),
-    51: ('torch on grass', torch_on('63a563', '8cd68c',
-                                    dict(FLAME, S='9c4a10', D='313118', h='317331')), 5),
-    # on sand the yellow flame tip would vanish: orange instead
-    52: ('torch on sand', torch_on('e7e76b', 'b5b55a',
-                                   dict(FLAME, Y='de7b29', S='9c4a10', D='313118', h='b5b55a')), 5),
 }
 BLOCKS.update(TORCH_CELLS)
+
+# Torches on grass and sand draw their ground's wavy border, like grass and
+# sand tiles do (draw/tiles.c grass_draw/sand_draw): the 12 upstream ground
+# tiles (0-11; sand draws the same shapes with palette 1), recoloured into
+# the ground's palette row, with a quarter of the torch on top.
+# 16 tiles per ground: tile = base + quadrant * 4 + v * 2 + h, where v/h say
+# whether the vertical/horizontal neighbour on the quadrant's side joins the
+# ground. Grass: cells 51-54 (tiles 204-219, palette 0). Sand: cells 55-58
+# (tiles 220-235, palette 1). mod_tile_draw picks the same tiles.
+TORCH_EDGE_CELL = 51
+
+def ground_tile_index(q, v, h):
+    """The upstream grass/sand tile for a quadrant (grass_draw's formula)."""
+    if v and h:
+        return q
+    return [4 + v * 7 + h * 4, 5 + v * 4 + h * 3,
+            6 + v * 5 + h * 4, 7 + v * 2 + h * 3][q]
+
+def torch_edge_tiles(row, legend):
+    from PIL import Image
+    import os
+    res = os.path.join(os.path.dirname(__file__), '..', '..', 'res')
+    level = Image.open(f'{res}/images/level.png').convert('RGB')
+    pal = Image.open(f'{res}/palettes/background.png').convert('RGB')
+    row0 = [pal.getpixel((x, 0)) for x in range(16)]
+    target = [pal.getpixel((x, row)) for x in range(16)]
+    hexc = lambda c: '%02x%02x%02x' % c
+    tiles = []
+    for q in range(4):
+        for v in (0, 1):
+            for h in (0, 1):
+                t = ground_tile_index(q, v, h)
+                tx, ty = (t // 4) * 2 + t % 2, (t // 2) % 2
+                ox, oy = (q % 2) * 8, (q // 2) * 8
+                out = []
+                for y in range(8):
+                    r = []
+                    for x in range(8):
+                        ch = TORCH[oy + y][ox + x]
+                        if ch != '.':
+                            r.append(legend[ch])
+                        else:
+                            # stored with row 0 colours: same index in 'row'
+                            c = level.getpixel((tx * 8 + x, ty * 8 + y))
+                            r.append(hexc(target[row0.index(c)]))
+                    out.append(r)
+                tiles.append(out)
+    return tiles
+
+TORCH_EDGES = [
+    # grass (row 0): stick in wood and the surface's dirt brown
+    ('torch on grass', 0, dict(O='080808', Y='b5b55a', R='de7b29', W='f7f7f7',
+                               S='7b6339', D='523939', h='317331')),
+    # sand (row 1): orange flame tip (yellow would vanish on sand)
+    ('torch on sand', 1, dict(O='080808', Y='de7b29', R='de7b29', W='e7e7a5',
+                              S='846b6b', D='523939', h='b5b55a')),
+]
+for g, (name, row, legend) in enumerate(TORCH_EDGES):
+    for i, cell in enumerate(tiles_to_cells(torch_edge_tiles(row, legend))):
+        BLOCKS[TORCH_EDGE_CELL + g * 4 + i] = (f'{name} ({i})', cell, row)
 
 # colours added to free slots of background palette rows
 BG_ADD = {9: ['cea5a5', '9c2929', '6b2121', '211010']}
@@ -244,8 +299,9 @@ BG_SET = {8: {3: '10108c', 12: '9494ad', 13: 'c6c6de'},
           # tile holding only dirt + stick colours (it resolves to row 0)
           # still draws right with row 3
           3: {7: 'de7b29', 8: '7b6339', 9: '4a3121', 10: 'e7e76b', 11: 'f7f7f7'},
-          # torch on grass and sand: the flame core
-          5: {10: 'f7f7f7'}}
+          # torch on grass and on sand: the orange flame
+          0: {11: 'de7b29'},
+          1: {11: 'de7b29'}}
 
 # items.png icon -> (name, 8x8 grid, legend, items palette row)
 BRICK_ICON = [

@@ -38,8 +38,8 @@ static const u8 mod_tile_palettes[TILE_TYPES - FIRST_MOD_TILE] = {
     3,  // torch (on dirt)
     7,  // spawner
     6,  // ice
-    5,  // torch on grass
-    5   // torch on sand
+    0,  // torch on grass (see torch_edge_draw)
+    1   // torch on sand
 };
 
 // Planks, stone bricks and clay bricks join their own kind like rock:
@@ -60,6 +60,30 @@ static inline u32 connected_state(bool v, bool h, bool diag) {
 static inline bool wall_joins(u32 neighbour, u32 tile) {
     return neighbour == tile ||
            neighbour == DOOR_CLOSED_TILE || neighbour == DOOR_OPEN_TILE;
+}
+
+// Torches on grass and sand draw their ground's wavy border where a
+// neighbour doesn't join it, like grass_draw/sand_draw: 16 tiles each,
+// tile = base + quadrant * 4 + v * 2 + h (see art_blocks_v2.py). Grass:
+// tiles 204-219 with palette 0; sand: 220-235 with palette 1.
+#define TORCH_EDGE_TILES (204)
+
+static inline void torch_edge_draw(struct Level *level, i32 xt, i32 yt,
+                                   bool sand, u16 tiles[4]) {
+    #define JOINS(x, y) (sand ?\
+        LEVEL_GET_TILE_S(level, (x), (y))->connects_to.sand :\
+        LEVEL_GET_TILE_S(level, (x), (y))->connects_to.grass)
+    const u32 u = JOINS(xt,     yt - 1);
+    const u32 d = JOINS(xt,     yt + 1);
+    const u32 l = JOINS(xt - 1, yt    );
+    const u32 r = JOINS(xt + 1, yt    );
+    #undef JOINS
+
+    const u16 base = (TORCH_EDGE_TILES + sand * 16) | sand << 12;
+    tiles[0] = base +  0 + u * 2 + l;
+    tiles[1] = base +  4 + u * 2 + r;
+    tiles[2] = base +  8 + d * 2 + l;
+    tiles[3] = base + 12 + d * 2 + r;
 }
 
 static inline void connected_draw(struct Level *level, i32 xt, i32 yt,
@@ -93,11 +117,13 @@ void mod_tile_draw(struct Level *level, u32 xt, u32 yt, u16 tiles[4]) {
         return;
     }
 
-    // every other mod tile is a full 16x16 cell: cell = tile ID, except
-    // the torches on grass and sand (cells 51 and 52; 36-50 are walls)
-    const u32 cell = (tile == TORCH_GRASS_TILE) ? 51 :
-                     (tile == TORCH_SAND_TILE)  ? 52 : tile;
-    const u16 base = (cell * 4) | palette;
+    if(tile == TORCH_GRASS_TILE || tile == TORCH_SAND_TILE) {
+        torch_edge_draw(level, xt, yt, tile == TORCH_SAND_TILE, tiles);
+        return;
+    }
+
+    // every other mod tile is a full 16x16 cell: cell = tile ID
+    const u16 base = (tile * 4) | palette;
     tiles[0] = base;
     tiles[1] = base + 1;
     tiles[2] = base + 2;

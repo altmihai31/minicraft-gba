@@ -35,12 +35,14 @@ Always draw with the palette row listed here, or colours come out wrong.
 | 36-40 | 144-163 | 0 | planks, connected (placed) |
 | 41-45 | 164-183 | 2 | stone bricks, connected (placed) |
 | 46-50 | 184-203 | 9 | clay bricks, connected (placed) |
-| 51 | 204-207 | 5 | torch on grass |
-| 52 | 208-211 | 5 | torch on sand |
+| 51-54 | 204-219 | 0 | torch on grass, with grass's border pieces |
+| 55-58 | 220-235 | 1 | torch on sand, with sand's border pieces |
 
 A torch is one of three tile types, by the ground it was placed on: `TORCH_TILE` (33, on dirt),
-`TORCH_GRASS_TILE` (36, drawn from cell 51) and `TORCH_SAND_TILE` (37, cell 52). Each has its ground's
-neighbour rules (grass/sand borders, water shores) and leaves its ground when broken.
+`TORCH_GRASS_TILE` (36) and `TORCH_SAND_TILE` (37). Each has its ground's neighbour rules and leaves its
+ground when broken. Torches on grass and sand also draw their ground's wavy border: the 12 upstream ground
+tiles recoloured into palette 0 (grass) or 1 (sand) with a torch quarter on top, 16 per ground,
+`tile = base + quadrant * 4 + v * 2 + h` (`torch_edge_draw` in mod-tiles.c). level.png is now 176x96.
 
 Placed planks, stone bricks and clay bricks join their own kind like rock (square edges): white rim on
 exposed top/left sides, a dark south face, transparent ground outside (shows the level's dirt colour).
